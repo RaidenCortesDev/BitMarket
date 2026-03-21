@@ -15,4 +15,10 @@ Para mantener un historial limpio y profesional, utilizamos **Conventional Commi
 - `refactor:` Mejora de código que no añade funciones ni arregla bugs.
 - `chore:` Tareas de mantenimiento, configuración o herramientas (ej: firebase).
 
+## 🛠️ Stack Tecnológico
 
+- **Frontend:** [Lit](https://lit.dev/) (Web Components livianos)
+- **Validación:** [Zod](https://zod.dev/)
+- **Backend/Hosting:** [Firebase](https://firebase.google.com/)
+- **Automatización:** GitHub Actions (CI/CD)
+- **Bundler:** [Vite](https://vitejs.dev/)
