@@ -11,3 +11,6 @@ Para mantener un historial limpio y profesional, utilizamos **Conventional Commi
 - `style:` Formato, CSS, puntos y comas (sin cambios en lógica).
 - `refactor:` Mejora de código que no añade funciones ni arregla bugs.
 - `chore:` Tareas de mantenimiento, configuración o herramientas (ej: firebase).
+
+
+![Despliegue a Firebase](https://github.com/RaidenCortesDev/BitMarket/actions/workflows/firebase-hosting-merge.yml/badge.svg)
