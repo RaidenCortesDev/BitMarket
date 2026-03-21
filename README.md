@@ -1,6 +1,9 @@
 # BitMarket
 e comerse con Note js Express Js Con sistema de inventario Historial de precios Y cupones
 
+
+![Despliegue a Firebase](https://github.com/RaidenCortesDev/BitMarket/actions/workflows/firebase-hosting-merge.yml/badge.svg)
+
 ## 🚀 Estándares de Mensajes de Commit
 
 Para mantener un historial limpio y profesional, utilizamos **Conventional Commits**:
@@ -13,4 +16,3 @@ Para mantener un historial limpio y profesional, utilizamos **Conventional Commi
 - `chore:` Tareas de mantenimiento, configuración o herramientas (ej: firebase).
 
 
-![Despliegue a Firebase](https://github.com/RaidenCortesDev/BitMarket/actions/workflows/firebase-hosting-merge.yml/badge.svg)
