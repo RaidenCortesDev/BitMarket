@@ -34,15 +34,13 @@ pool.connect((err, client, release) => {
 // Endpoint de prueba
 app.get('/api/categorias', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM categories');
+        // Consultamos la tabla que acabas de crear en pgAdmin
+        const result = await pool.query('SELECT * FROM categories WHERE status_id = 1');
+        
+        // Si todo sale bien, mandamos el JSON
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error al obtener categorías' });
+        console.error('❌ Error en el query:', err);
+        res.status(500).json({ error: 'Valió queso el servidor' });
     }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });
