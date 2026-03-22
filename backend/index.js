@@ -44,3 +44,18 @@ app.get('/api/categorias', async (req, res) => {
         res.status(500).json({ error: 'Valió queso el servidor' });
     }
 });
+
+// 1. LA PRUEBA (Opcional, solo para loguear)
+pool.connect((err, client, release) => {
+    if (err) {
+        return console.error('❌ Error de conexión:', err.stack);
+    }
+    console.log('✅ Conexión exitosa a PostgreSQL');
+    release();
+});
+
+// 2. EL ENCENDIDO (Obligatorio para que Render no falle)
+const PORT = process.env.PORT || 10000; // Render usa el 10000 por defecto
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor escuchando en el puerto ${PORT}`);
+});
