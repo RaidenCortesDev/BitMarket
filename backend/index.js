@@ -1,4 +1,4 @@
-require('dotenv').config(); // Carga las variables del .env
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
@@ -7,28 +7,34 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuración del Pool de conexión
+// CONFIGURACIÓN INTELIGENTE DEL POOL
+const isProduction = process.env.DATABASE_URL; // Si existe esta variable, estamos en Render
+
 const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
+    // En Render usa la URL larga, en Local usa tus variables del .env
+    connectionString: isProduction ? process.env.DATABASE_URL : undefined,
+    user: isProduction ? undefined : process.env.DB_USER,
+    host: isProduction ? undefined : process.env.DB_HOST,
+    database: isProduction ? undefined : process.env.DB_NAME,
+    password: isProduction ? undefined : process.env.DB_PASSWORD,
+    port: isProduction ? undefined : process.env.DB_PORT,
+    // SSL es obligatorio en Render, pero en Local da problemas, por eso lo condicionamos:
+    ssl: isProduction ? { rejectUnauthorized: false } : false 
 });
 
-// Probar conexión al iniciar
+// Probar conexión
 pool.connect((err, client, release) => {
     if (err) {
         return console.error('❌ Error adquiriendo el cliente', err.stack);
     }
-    console.log('✅ Conexión exitosa a PostgreSQL (bitmarket_db)');
+    console.log(`✅ Conexión exitosa a PostgreSQL (${isProduction ? 'Producción/Render' : 'Localhost'})`);
     release();
 });
 
-// --- TU PRIMERA API REAL: LISTAR CATEGORÍAS ---
+// Endpoint de prueba
 app.get('/api/categorias', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM categories WHERE status_id = 1');
+        const result = await pool.query('SELECT * FROM categories');
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -38,5 +44,5 @@ app.get('/api/categorias', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });

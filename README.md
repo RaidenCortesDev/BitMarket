@@ -22,3 +22,4 @@ Para mantener un historial limpio y profesional, utilizamos **Conventional Commi
 - **Backend/Hosting:** [Firebase](https://firebase.google.com/)
 - **Automatización:** GitHub Actions (CI/CD)
 - **Bundler:** [Vite](https://vitejs.dev/)
+
