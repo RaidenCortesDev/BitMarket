@@ -36,16 +36,9 @@ Utilizamos **Conventional Commits** para mantener un historial limpio:
 - **Validación de Datos:** [Zod](https://zod.dev/) (Esquemas de tipado fuerte).
 - **Bundler:** [Vite](https://vitejs.dev/).
 
-### Backend & Infraestructura
-- **Servidor:** Node.js + Express.js.
-- **Base de Datos:** PostgreSQL (Render) / Firebase Auth.
-- **Hosting:** [Firebase](https://firebase.google.com/).
+### Backend e Infraestructura (Híbrida)
+- **Servidor API:** Node.js + Express.js.
+- **Base de Datos:** **PostgreSQL** (Hospedada en [Render](https://render.com/)).
+- **Autenticación:** Firebase Auth.
+- **Hosting Frontend:** [Firebase Hosting](https://firebase.google.com/).
 - **CI/CD:** GitHub Actions (Despliegue automatizado).
-
----
-
-## 📈 Roadmap de Próximas Implementaciones
-- [ ] **Validación con Zod:** Implementar esquemas para la creación de cupones (evitar descuentos > 100%).
-- [ ] **Historial de Precios:** Registro cronológico de cambios de costo en la DB.
-- [ ] **Middleware de Roles:** Restringir rutas de Express según el perfil (`admin` vs `user`).
-- [ ] **Componentes Lit:** Creación de Web Components para visualización de gráficas de precios.
