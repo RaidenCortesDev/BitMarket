@@ -6,12 +6,14 @@ E-commerce robusto desarrollado con **Node.js** y **Express.js**. Incluye un sis
 ---
 
 ## 👥 Perfiles de Prueba (QA & Demo)
-Para pruebas de entorno y auditorías de acceso, utilizar las siguientes credenciales genéricas:
+Para pruebas de entorno, auditorías de acceso y validación de roles, utilizar las siguientes credenciales genéricas. 
 
-| Rol | Correo de Acceso | Permisos |
+> **Nota:** Para facilitar el acceso en desarrollo, la **contraseña** de cada cuenta es su propio **correo electrónico**.
+
+| Rol | Correo de Acceso / Contraseña | Alcance de Permisos |
 | :--- | :--- | :--- |
-| **Super Admin** | `admin@bitmarket.test` | Control total, gestión de inventario, creación de cupones. |
-| **Cliente** | `cliente@bitmarket.test` | Navegación, carrito de compras, aplicación de cupones. |
+| **Super Admin** | `admin@bitmarket.test` | Gestión total de inventario, edición de precios y creación de cupones. |
+| **Cliente** | `cliente@bitmarket.test` | Flujo de compra, visualización de catálogo y redención de cupones. |
 
 ---
 
