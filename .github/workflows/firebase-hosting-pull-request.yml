@@ -27,3 +27,4 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BITMARKET_96C82 }}
           projectId: bitmarket-96c8282
+          channelId: pr-${{ github.event.number }}
