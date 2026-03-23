@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const bcrypt = require('bcrypt')
 
 const app = express();
 app.use(cors());
@@ -19,7 +20,7 @@ const pool = new Pool({
     password: isProduction ? undefined : process.env.DB_PASSWORD,
     port: isProduction ? undefined : process.env.DB_PORT,
     // SSL es obligatorio en Render, pero en Local da problemas, por eso lo condicionamos:
-    ssl: isProduction ? { rejectUnauthorized: false } : false 
+    ssl: isProduction ? { rejectUnauthorized: false } : false
 });
 
 // Probar conexión
@@ -36,7 +37,7 @@ app.get('/api/categorias', async (req, res) => {
     try {
         // Consultamos la tabla que acabas de crear en pgAdmin
         const result = await pool.query('SELECT * FROM categories WHERE status_id = 1');
-        
+
         // Si todo sale bien, mandamos el JSON
         res.json(result.rows);
     } catch (err) {
@@ -54,8 +55,93 @@ pool.connect((err, client, release) => {
     release();
 });
 
-// 2. EL ENCENDIDO (Obligatorio para que Render no falle)
-const PORT = process.env.PORT || 10000; // Render usa el 10000 por defecto
+// 1. Consultar todos los usuarios (Para Postman)
+app.get('/api/usuarios', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM users ORDER BY id DESC');
+        res.status(200).json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 2. Registro de usuario
+app.post('/api/registro', async (req, res) => {
+    const { nombre, email, password } = req.body;
+    console.log("Recibiendo registro para:", email); // Debug
+
+    try {
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        
+        console.log("Contraseña original:", password);
+        console.log("Contraseña encriptada:", hashedPassword); // AQUÍ VERÁS EL HASH
+
+        const result = await pool.query(
+            'INSERT INTO users (nombre, email, password, status_id, role_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [nombre, email, hashedPassword, 1, 3]
+        );
+
+        res.status(201).json({
+            message: "¡Usuario creado!",
+            user: { nombre: result.rows[0].nombre, rol: 'cliente' }
+        });
+    } catch (err) {
+        console.error("❌ Error:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 3. Login de usuario 
+
+app.post('/api/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        // 1. Buscar al usuario por email
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ error: "El correo no está registrado" });
+        }
+
+        const user = result.rows[0];
+
+        // 2. Comparar la contraseña ingresada con el hash de la base de datos
+        const match = await bcrypt.compare(password, user.password);
+
+        if (!match) {
+            return res.status(401).json({ error: "Contraseña incorrecta" });
+        }
+
+        // 3. Si todo está bien, responder con los datos y el rol
+        const rolAsignado = user.role_id === 1 ? 'admin' : 'cliente';
+
+        return res.json({
+            message: "¡Bienvenido de nuevo!",
+            user: {
+                nombre: user.nombre,
+                email: user.email,
+                rol: rolAsignado
+            }
+        });
+
+    } catch (err) {
+        console.error("❌ Error en Login:", err.message);
+        res.status(500).json({ error: "Error en el servidor" });
+    }
+
+    if (!response.ok) {
+    const textError = await response.text(); // Lee el HTML del error
+    console.error("Respuesta del servidor:", textError);
+    throw new Error("El servidor respondió con un error (ver consola)");
+}
+
+const data = await response.json();
+});
+
+// --- AHORA SÍ, EL ENCENDIDO ---
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor escuchando en el puerto ${PORT}`);
+    console.log(`🚀 Servidor listo en puerto ${PORT}`);
 });
