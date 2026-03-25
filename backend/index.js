@@ -2,8 +2,16 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const cloudinary = require('cloudinary').v2;
 const bcrypt = require('bcrypt')
 
+// Configurar Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+console.log("¿Cloudinary configurado?:", cloudinary.config().cloud_name ? "✅ Sí" : "❌ No");
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -136,6 +144,28 @@ app.post('/api/login', async (req, res) => {
     console.error("Respuesta del servidor:", textError);
     throw new Error("El servidor respondió con un error (ver consola)");
 }
+
+// Endpoint para obtener productos (Index)
+app.get('/api/productos', async (req, res) => {
+    try {
+        // Traemos productos activos
+        const result = await pool.query('SELECT * FROM products WHERE status_id = 1 ORDER BY id DESC');
+        res.json(result.rows);
+    } catch (err) {
+        console.error('❌ Error al traer productos:', err);
+        res.status(500).json({ error: 'Error al cargar el inventario' });
+    }
+});
+
+// Traer solo los 5 productos más recientes para la Landing
+app.get('/api/productos/destacados', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM products WHERE status_id = 1 ORDER BY id DESC LIMIT 5');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al cargar destacados' });
+    }
+});
 
 const data = await response.json();
 });
