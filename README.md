@@ -39,6 +39,7 @@ Utilizamos **Conventional Commits** para mantener un historial limpio:
 ### Backend e Infraestructura (Híbrida)
 - **Servidor API:** Node.js + Express.js.
 - **Base de Datos:** **PostgreSQL** (Hospedada en [Render](https://render.com/)).
+- **Gestión de Medios:** [Cloudinary](https://cloudinary.com/) (Almacenamiento y optimización de imágenes de productos).
 - **Autenticación:** Firebase Auth.
 - **Hosting Frontend:** [Firebase Hosting](https://firebase.google.com/).
 - **CI/CD:** GitHub Actions (Despliegue automatizado).
