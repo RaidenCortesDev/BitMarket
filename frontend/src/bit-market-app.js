@@ -9,39 +9,68 @@ export class BitMarketApp extends LitElement {
     static properties = {
         rol: { type: String },
         view: { type: String }, // 'landing', 'auth', 'dashboard'
-        authMode: { type: String } // 'login' o 'registro'
+        authMode: { type: String }, // 'login' o 'registro'
+        adminSection: { type: String }
     };
 
     constructor() {
         super();
-        // Intentamos recuperar la sesión guardada
         const savedUser = JSON.parse(localStorage.getItem('bm_session'));
 
-        if (savedUser) {
+        if (savedUser && savedUser.rol) {
             this.rol = savedUser.rol;
             this.view = 'dashboard';
         } else {
             this.rol = 'cliente';
             this.view = 'landing';
         }
-        this.authMode = 'login';
     }
 
-    // Funciones para cambiar de escena
-    //_goToLogin() { this.view = 'login'; }
     _goToAuth(mode) {
         this.authMode = mode;
         this.view = 'auth';
     }
 
-    // Modifica la función _goToDashboard para recibir el evento
     _goToDashboard(e) {
-        if (e.detail && e.detail.user) {
-            this.rol = e.detail.user.rol;
-            // GUARDAMOS EN EL NAVEGADOR
-            localStorage.setItem('bm_session', JSON.stringify(e.detail.user));
+
+        // Cambiamos la validación: ahora buscamos e.detail directamente
+        if (e && e.detail && e.detail.rol) { 
+            const user = e.detail; // El usuario ES el detail directamente
+
+            // 1. Guardamos en LocalStorage
+            localStorage.setItem('bm_session', JSON.stringify(user));
+
+            // 2. Seteamos propiedades reactivas
+            this.rol = user.rol;
+            this.view = 'dashboard';
+
+            console.log("✅ Sesión iniciada");
+
+            this.requestUpdate();
+        } else {
+            console.error("❌ El evento no tiene la propiedad 'rol':", e.detail);
         }
-        this.view = 'dashboard';
+    }
+
+    render() {
+        return html`
+        <bm-header @open-login="${() => this._goToAuth('login')}"></bm-header>
+
+        <main>
+            ${this.view === 'landing' ? this._renderLanding() : ''}
+            
+            ${this.view === 'auth' ? html`
+                <section class="auth-container">
+                    ${this.authMode === 'login'
+                    ? html`<bm-login @success="${(e) => this._goToDashboard(e)}"></bm-login>`
+                    : html`<bm-registro @success="${(e) => this._goToDashboard(e)}"></bm-registro>`
+                }
+                </section>
+            ` : ''}
+
+            ${this.view === 'dashboard' ? this._renderDashboard() : ''}
+        </main>
+        `;
     }
 
     // Para cerrar sesión
@@ -51,63 +80,43 @@ export class BitMarketApp extends LitElement {
         this.rol = 'cliente';
     }
 
-    render() {
-        return html`
-        <!-- Escuchamos el evento del header para ir a login -->
-        <bm-header @open-login="${() => this._goToAuth('login')}"></bm-header>
-
-        ${this.view === 'landing' ? this._renderLanding() : ''}
-        
-        ${this.view === 'auth' ? html`
-            <section class="auth-container">
-                ${this.authMode === 'login'
-                    ? html`
-                        <bm-login @success="${(e) => this._goToDashboard(e)}"></bm-login>
-                        <p style="text-align:center; color:gray; cursor:pointer" @click="${() => this.authMode = 'registro'}">
-                            ¿No tienes cuenta? Regístrate aquí
-                        </p>`
-                    : html`
-                        <bm-registro @success="${(e) => this._goToDashboard(e)}"></bm-registro>
-                        <p style="text-align:center; color:gray; cursor:pointer" @click="${() => this.authMode = 'login'}">
-                            ¿Ya tienes cuenta? Inicia sesión
-                        </p>`
-                }
-            </section>
-        ` : ''}
-
-        ${this.view === 'dashboard' ? this._renderDashboard() : ''}
-    `;
-    }
 
     _renderDashboard() {
         return html`
         ${this.rol === 'admin'
-                ? html`<bm-navbar-admin></bm-navbar-admin>`
+                ? html`<bm-navbar-admin @admin-nav="${(e) => this.adminSection = e.detail.seccion}"></bm-navbar-admin>`
                 : html`<bm-navbar-client></bm-navbar-client>`}
         
         <main class="dashboard-container">
             <header>
-                <h2>Bienvenido, ${this.rol}</h2>
+                <h2>Bienvenido, <span style="color: #4CAF50">${this.rol}</span></h2>
                 <button @click="${this._logout}">Cerrar Sesión</button>
             </header>
 
-            ${this.rol === 'admin'
+            <div class="dashboard-content">
+                ${this.rol === 'admin'
                 ? html`
-                    <section class="admin-tools">
-                        <h3>Gestión de Inventario</h3>
-                        <p>Aquí saldrá la tabla para editar precios y stock.</p>
+                        <section class="admin-tools">
+                            <h3>Gestión de Inventario (Modo Admin)</h3>
+                            <p>Aquí saldrá la tabla para editar precios y stock.</p>
                         </section>`
                 : html`
-                    <section class="client-shop">
-                        <h3>Explora nuestro catálogo</h3>
-                        <p>Aquí saldrán TODOS los productos con botón de carrito.</p>
+                        <section class="client-shop">
+                            <h3>Explora nuestro catálogo (Modo Cliente)</h3>
+                            <p>Aquí saldrán TODOS los productos con botón de carrito.</p>
                         </section>`
             }
+            </div>
         </main>
-    `;
+
+        <style>
+            .dashboard-container { padding: 20px; }
+            header { display: flex; justify-content: space-between; align-items: center; }
+            .admin-tools { border: 2px solid red; padding: 10px; } /* Temporal para visualizar */
+        </style>
+        `;
     }
 
-    // Dentro de bit-market-app.js
     _renderLanding() {
         return html`
             <section class="hero">
