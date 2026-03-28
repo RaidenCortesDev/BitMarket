@@ -4,6 +4,8 @@ import './components/bm-navbar-client.js';
 import './components/bm-navbar-admin.js';
 import './components/bm-registro.js';
 import './components/bm-login.js';
+import './components/bm-admin-categorias.js';
+import './components/bm-admin-productos.js';
 
 export class BitMarketApp extends LitElement {
     static properties = {
@@ -81,42 +83,51 @@ export class BitMarketApp extends LitElement {
     }
 
 
-    _renderDashboard() {
-        return html`
-        ${this.rol === 'admin'
-                ? html`<bm-navbar-admin @admin-nav="${(e) => this.adminSection = e.detail.seccion}"></bm-navbar-admin>`
-                : html`<bm-navbar-client></bm-navbar-client>`}
-        
-        <main class="dashboard-container">
-            <header>
-                <h2>Bienvenido, <span style="color: #4CAF50">${this.rol}</span></h2>
-                <button @click="${this._logout}">Cerrar Sesión</button>
-            </header>
+_renderDashboard() {
+    return html`
+    ${this.rol === 'admin'
+        ? html`<bm-navbar-admin @admin-nav="${(e) => this.adminSection = e.detail.seccion}"></bm-navbar-admin>`
+        : html`<bm-navbar-client></bm-navbar-client>`}
+    
+    <main class="dashboard-container">
+        <header>
+            <h2>Bienvenido, <span style="color: #4CAF50">${this.rol}</span> (${this.adminSection || 'inicio'})</h2>
+            <button @click="${this._logout}">Cerrar Sesión</button>
+        </header>
 
-            <div class="dashboard-content">
-                ${this.rol === 'admin'
-                ? html`
-                        <section class="admin-tools">
+        <div class="dashboard-content">
+            ${this.rol === 'admin'
+            ? html`
+                <section class="admin-tools">
+                    ${this.adminSection === 'categorias' 
+                        ? html`
+                            <bm-admin-categorias></bm-admin-categorias>
+                            `
+                        : this.adminSection === 'productos'
+                        ? html`
+                                <bm-admin-productos></bm-admin-productos
+                                `
+                        : html`
                             <h3>Gestión de Inventario (Modo Admin)</h3>
-                            <p>Aquí saldrá la tabla para editar precios y stock.</p>
-                        </section>`
-                : html`
-                        <section class="client-shop">
-                            <h3>Explora nuestro catálogo (Modo Cliente)</h3>
-                            <p>Aquí saldrán TODOS los productos con botón de carrito.</p>
-                        </section>`
+                            <p>Selecciona una opción en la barra roja superior para empezar.</p>`
+                    }
+                </section>`
+            : html`
+                <section class="client-shop">
+                    <h3>Explora nuestro catálogo (Modo Cliente)</h3>
+                    <p>Aquí saldrán TODOS los productos con botón de carrito.</p>
+                </section>`
             }
-            </div>
-        </main>
+        </div>
+    </main>
 
-        <style>
-            .dashboard-container { padding: 20px; }
-            header { display: flex; justify-content: space-between; align-items: center; }
-            .admin-tools { border: 2px solid red; padding: 10px; } /* Temporal para visualizar */
-        </style>
-        `;
-    }
-
+    <style>
+        .dashboard-container { padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; }
+        .admin-tools { border: 2px solid #B39DDB; padding: 10px; }
+    </style>
+    `;
+}
     _renderLanding() {
         return html`
             <section class="hero">

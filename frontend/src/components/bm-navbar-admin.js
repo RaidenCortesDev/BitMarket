@@ -2,17 +2,17 @@ import { LitElement, html, css } from 'lit';
 
 export class BmNavbarAdmin extends LitElement {
     static styles = css`
-        nav { background: #1a1a1a; padding: 0.8rem; border-bottom: 2px solid #f44336; }
+        nav { background: #1a1a1a; padding: 0.8rem; border-bottom: 2px solid #B39DDB; }
         ul { list-style: none; display: flex; gap: 20px; margin: 0; padding: 0; justify-content: center; }
         li { 
             cursor: pointer; 
-            color: #ef9a9a; 
-            font-weight: bold; 
+            color: #ffffff; 
+            font-weight: bold; .
             transition: 0.3s;
             text-transform: uppercase;
             font-size: 0.8rem;
         }
-        li:hover { color: #f44336; }
+        li:hover { color: #B39DDB; }
     `;
 
 
