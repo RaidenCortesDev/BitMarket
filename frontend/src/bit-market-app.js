@@ -36,7 +36,7 @@ export class BitMarketApp extends LitElement {
     _goToDashboard(e) {
 
         // Cambiamos la validación: ahora buscamos e.detail directamente
-        if (e && e.detail && e.detail.rol) { 
+        if (e && e.detail && e.detail.rol) {
             const user = e.detail; // El usuario ES el detail directamente
 
             // 1. Guardamos en LocalStorage
@@ -61,12 +61,36 @@ export class BitMarketApp extends LitElement {
         <main>
             ${this.view === 'landing' ? this._renderLanding() : ''}
             
+
             ${this.view === 'auth' ? html`
                 <section class="auth-container">
                     ${this.authMode === 'login'
-                    ? html`<bm-login @success="${(e) => this._goToDashboard(e)}"></bm-login>`
-                    : html`<bm-registro @success="${(e) => this._goToDashboard(e)}"></bm-registro>`
-                }
+                                ? html`<bm-login @success="${(e) => this._goToDashboard(e)}"></bm-login>`
+                                : html`<bm-registro @success="${(e) => this._goToDashboard(e)}"></bm-registro>`
+                            }
+
+                    <div class="auth-toggle" style="text-align: center; margin-top: 20px; color: #fff;">
+                        ${this.authMode === 'login'
+                                ? html`
+                                <p>¿No tienes cuenta? 
+                                    <span @click="${() => this.authMode = 'registro'}" 
+                                            style="color: #4CAF50; cursor: pointer; font-weight: bold; text-decoration: underline;">
+                                        Regístrate aquí
+                                    </span>
+                                </p>`
+                                : html`
+                                <p>¿Ya tienes cuenta? 
+                                    <span @click="${() => this.authMode = 'login'}" 
+                                            style="color: #4CAF50; cursor: pointer; font-weight: bold; text-decoration: underline;">
+                                        Inicia sesión
+                                    </span>
+                                </p>`
+                            }
+                        <button @click="${() => this.view = 'landing'}" 
+                                style="margin-top: 10px; background: none; border: none; color: #aaa; cursor: pointer;">
+                            Volver al inicio
+                        </button>
+                    </div>
                 </section>
             ` : ''}
 
@@ -83,11 +107,11 @@ export class BitMarketApp extends LitElement {
     }
 
 
-_renderDashboard() {
-    return html`
+    _renderDashboard() {
+        return html`
     ${this.rol === 'admin'
-        ? html`<bm-navbar-admin @admin-nav="${(e) => this.adminSection = e.detail.seccion}"></bm-navbar-admin>`
-        : html`<bm-navbar-client></bm-navbar-client>`}
+                ? html`<bm-navbar-admin @admin-nav="${(e) => this.adminSection = e.detail.seccion}"></bm-navbar-admin>`
+                : html`<bm-navbar-client></bm-navbar-client>`}
     
     <main class="dashboard-container">
         <header>
@@ -97,22 +121,22 @@ _renderDashboard() {
 
         <div class="dashboard-content">
             ${this.rol === 'admin'
-            ? html`
+                ? html`
                 <section class="admin-tools">
-                    ${this.adminSection === 'categorias' 
+                    ${this.adminSection === 'categorias'
                         ? html`
                             <bm-admin-categorias></bm-admin-categorias>
                             `
                         : this.adminSection === 'productos'
-                        ? html`
+                            ? html`
                                 <bm-admin-productos></bm-admin-productos
                                 `
-                        : html`
+                            : html`
                             <h3>Gestión de Inventario (Modo Admin)</h3>
                             <p>Selecciona una opción en la barra roja superior para empezar.</p>`
                     }
                 </section>`
-            : html`
+                : html`
                 <section class="client-shop">
                     <h3>Explora nuestro catálogo (Modo Cliente)</h3>
                     <p>Aquí saldrán TODOS los productos con botón de carrito.</p>
@@ -127,7 +151,7 @@ _renderDashboard() {
         .admin-tools { border: 2px solid #B39DDB; padding: 10px; }
     </style>
     `;
-}
+    }
     _renderLanding() {
         return html`
             <section class="hero">
