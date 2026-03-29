@@ -85,21 +85,27 @@ export class BmAdminProductos extends LitElement {
     this.isEditing = true;
     this.requestUpdate();
 }*/
-    _editarProducto(p) {
-        console.log("Datos que llegan del botón editar:", p);
 
+    // bm-admin-productos.js
+
+    // ... (dentro de tu método de renderizado o donde gestiones los chips)
+
+    _seleccionarCategoria(catId) {
+        console.log('Cambiando categoría a:', catId);
+        this.productoActual = { ...this.productoActual, id_categoria: catId };
+        this.requestUpdate(); // Asegura que Lit vuelva a renderizar con la nueva clase active
+    }
+
+    _editarProducto(p) {
+        // Solo agregamos la asignación de categorias:
         this.productoActual = {
             ...p,
-            // Forzamos a que 'categorias' sea un array de números.
-            // Probamos con todas las variantes que el backend podría estar enviando:
-            
-            categorias: (p.categoria_ids || p.categorias || [])
-                .map(id => Number(id)) // Aseguramos que sean números para que el .includes(c.id) no falle
-                .filter(id => id !== 0 && !isNaN(id))
+            // Si el backend nos mandó categoria_ids, los usamos, si no, array vacío
+            categorias: Array.isArray(p.categoria_ids) ? p.categoria_ids : []
         };
-        console.log("2. IDs procesados en productoActual.categorias:", this.productoActual.categorias); //
+        console.log("2. IDs procesados en productoActual.categorias:", this.productoActual.categorias)
         this.isEditing = true;
-        this.requestUpdate(); // Forzamos a Lit a ver el cambio
+        this.requestUpdate();
     }
     render() {
         if (this.isEditing) return this._renderForm();
@@ -193,24 +199,21 @@ export class BmAdminProductos extends LitElement {
                     <label>Categorías:</label>
                     <div class="chips-container">
                         ${this.categoriasDisponibles.map(c => {
-            const idsActuales = this.productoActual.categorias || [];
-            //const isActive = idsActuales.includes(c.id);
-            // Dentro de tu .map de categorías disponibles:
-            const isActive = (this.productoActual.categorias || [])
-                .map(Number) // Convertir todo a número antes de comparar
-                .includes(Number(c.id));
-            // Este log te dirá si hay un mismatch de tipos (ej: 1 vs "1")
-            if (this.isEditing) {
-                console.log(`Chip ${c.nombre} (ID: ${c.id}) - ¿Está activo?:`, isActive, "Lista de IDs:", idsActuales);
-            }
+                        // 💡 CLAVE: Miramos siempre a 'categorias', no a 'categoria_ids'
+                        const idsActivos = this.productoActual.categorias || [];
+                        
+                        // Convertimos ambos a String para evitar problemas de tipo (1 vs "1")
+                        const isActive = idsActivos.some(id => String(id) === String(c.id));
 
-            return html`
-                                <div class="chip ${isActive ? 'active' : ''}"
-                                    @click="${() => this._toggleCategory(c.id)}">
-                                    ${c.nombre}
-                                </div>
-                            `;
-        })}
+                        return html`
+                            <div 
+                                class="chip ${isActive ? 'active' : ''}"
+                                @click="${() => this._toggleCategory(c.id)}"
+                            >
+                                ${c.nombre}
+                            </div>
+                        `;
+                    })}
                     </div>
                     
                     <div class="field">
@@ -229,26 +232,31 @@ export class BmAdminProductos extends LitElement {
     }
 
     _openForm(prod = null) {
-        if (prod) {
-            this.productoActual = { ...prod, categorias: prod.categorias || [] };
-        } else {
-            this._initProducto();
-        }
-        this.isEditing = true;
+    if (prod) {
+        this.productoActual = { 
+            ...prod, 
+            // Si existe categoria_ids del backend, lo asignamos a categorias.
+            categorias: prod.categoria_ids || [] 
+        };
+    } else {
+        this._initProducto();
     }
+    this.isEditing = true;
+}
 
-    _toggleCategory(id) {
-        const actuales = this.productoActual.categorias || [];
-        const cats = [...actuales];
-        const idx = cats.indexOf(id);
-        if (idx > -1) {
-            cats.splice(idx, 1);
-        } else {
-            cats.push(id);
-        }
-        this.productoActual = { ...this.productoActual, categorias: cats };
-        this.requestUpdate();
+_toggleCategory(id) {
+    const actuales = this.productoActual.categorias || [];
+    const cats = [...actuales];
+    const idx = cats.indexOf(id);
+    if (idx > -1) {
+        cats.splice(idx, 1);
+    } else {
+        cats.push(id);
     }
+    this.productoActual = { ...this.productoActual, categorias: cats };
+    this.requestUpdate();
+}
+
 
     async _saveProduct(e) {
         e.preventDefault();

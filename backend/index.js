@@ -159,7 +159,8 @@ app.patch('/api/categorias/:id/desactivar', async (req, res) => {
 app.get('/api/productos', async (req, res) => {
     try {
         const query = `
-            SELECT p.*, 
+            SELECT p.*,
+                    ARRAY_AGG(c.id) FILTER (WHERE c.id IS NOT NULL) as categoria_ids, 
                     ARRAY_AGG(c.nombre) AS categoria_nombres,
                     ARRAY_AGG(c.id) AS categoria_ids
             FROM products p
