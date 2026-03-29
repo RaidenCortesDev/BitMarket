@@ -275,7 +275,6 @@ app.get('/api/productos/destacados', async (req, res) => {
 // Endpoint para rescatar las categorías activas
 app.get('/api/categorias/activas', async (req, res) => {
     try {
-        // Filtramos por status_id = 1 (Activo) según tu esquema
         const result = await pool.query(
             'SELECT id, nombre FROM categories WHERE status_id = 1 ORDER BY nombre ASC'
         );
@@ -283,6 +282,32 @@ app.get('/api/categorias/activas', async (req, res) => {
     } catch (err) {
         console.error('❌ Error al obtener categorías activas:', err);
         res.status(500).json({ error: 'Error al cargar categorías' });
+    }
+});
+
+// ... End po Para consultar clientes (para la Wallet) - Solo trae los clientes, no los admins
+
+app.get('/api/wallet/customers', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT id, nombre, email, saldo FROM users WHERE role_id = 3');
+        console.log("✅ Datos obtenidos:", result.rowCount);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("❌ Error real:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+app.get('/api/admin/customers', async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id, nombre, email, saldo, status_id FROM users WHERE role_id = 3'
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error('❌ Error en customers:', err);
+        res.status(500).json({ error: 'Error al obtener clientes' });
     }
 });
 
@@ -313,6 +338,64 @@ app.patch('/api/:tabla/:id/status', async (req, res) => {
         res.status(500).json({ error: 'Error al actualizar el estado' });
     }
 });
+
+// Endpoint Universal para cambiar estados (Baja Lógica)
+
+app.post('/api/wallet/recharge', async (req, res) => {
+    const { emitter_id, target_user_id, monto, descripcion } = req.body;
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        // 1. Obtener info de emisor y receptor
+        const usersInfo = await client.query(
+            'SELECT id, role_id, email, saldo FROM users WHERE id IN ($1, $2)', 
+            [emitter_id, target_user_id]
+        );
+        
+        const emitter = usersInfo.rows.find(u => u.id === emitter_id);
+        const target = usersInfo.rows.find(u => u.id === target_user_id);
+
+        if (!target) throw new Error('Usuario destino no encontrado');
+
+        // 2. VALIDACIÓN DE NEGATIVOS: No dejar la cuenta en menos de 0
+        const nuevoSaldo = parseFloat(target.saldo) + parseFloat(monto);
+        if (nuevoSaldo < 0) {
+            throw new Error(`Operación inválida: El saldo insuficiente ($${target.saldo}). No puede quedar en negativo.`);
+        }
+
+        // 3. Regla Admin
+        if (emitter.role_id === 1 && emitter_id === target_user_id) {
+            throw new Error('Un administrador no puede modificar su propio saldo');
+        }
+
+        // 4. Determinar tipo (Recarga o Ajuste/Resta)
+        let tipo = monto >= 0 ? 'recarga' : 'ajuste_negativo';
+        if (emitter.role_id === 1) tipo = `admin_${tipo}`;
+
+        // 5. Aplicar cambio
+        await client.query(
+            'UPDATE users SET saldo = saldo + $1 WHERE id = $2',
+            [monto, target_user_id]
+        );
+
+        // 6. Registro en Wallet
+        await client.query(
+            'INSERT INTO wallet (user_id, admin_id, monto, tipo, descripcion) VALUES ($1, $2, $3, $4, $5)',
+            [target_user_id, emitter.role_id === 1 ? emitter_id : null, monto, tipo, descripcion || 'Movimiento de saldo']
+        );
+
+        await client.query('COMMIT');
+        res.json({ message: 'Movimiento procesado correctamente', saldo_final: nuevoSaldo });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(400).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
 
 // --- Encendido del log del backend ---
 const PORT = process.env.PORT || 3000;

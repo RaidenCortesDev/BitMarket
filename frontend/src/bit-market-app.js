@@ -6,6 +6,7 @@ import './components/bm-registro.js';
 import './components/bm-login.js';
 import './components/bm-admin-categorias.js';
 import './components/bm-admin-productos.js';
+import './components/bm-admin-wallet.js';
 
 export class BitMarketApp extends LitElement {
     static properties = {
@@ -124,27 +125,26 @@ export class BitMarketApp extends LitElement {
 
         <div class="dashboard-content">
             ${this.rol === 'admin'
-                ? html`
-                <section class="admin-tools">
-                    ${this.adminSection === 'categorias'
                         ? html`
-                            <bm-admin-categorias></bm-admin-categorias>
-                            `
-                        : this.adminSection === 'productos'
-                            ? html`
-                                <bm-admin-productos></bm-admin-productos
-                                `
-                            : html`
-                            <h3>Gestión de Inventario (Modo Admin)</h3>
-                            <p>Selecciona una opción en la barra roja superior para empezar.</p>`
+                            <section class="admin-tools">
+                                ${this.adminSection === 'categorias'
+                                    ? html`<bm-admin-categorias></bm-admin-categorias>`
+                                    : this.adminSection === 'productos'
+                                        ? html`<bm-admin-productos></bm-admin-productos>`
+                                        : this.adminSection === 'wallet' // Aquí es donde entra la Wallet
+                                            ? html`
+                                                <bm-admin-wallet></bm-admin-wallet>`
+                                            : html`
+                                                <h3>Gestión de Inventario (Modo Admin)</h3>
+                                                <p>Selecciona una opción en la barra roja superior para empezar.</p>`
+                                }
+                            </section>`
+                        : html`
+                            <section class="client-shop">
+                                <h3>Explora nuestro catálogo (Modo Cliente)</h3>
+                                <p>Aquí saldrán TODOS los productos con botón de carrito.</p>
+                            </section>`
                     }
-                </section>`
-                : html`
-                <section class="client-shop">
-                    <h3>Explora nuestro catálogo (Modo Cliente)</h3>
-                    <p>Aquí saldrán TODOS los productos con botón de carrito.</p>
-                </section>`
-            }
         </div>
     </main>
 
