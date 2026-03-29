@@ -97,7 +97,7 @@ export class BmLogin extends LitElement {
 
             // 3. Notificar éxito a la app principal
             this.dispatchEvent(new CustomEvent('success', {
-                detail: { nombre: data.user.nombre, rol: data.user.rol },
+                detail: { id: data.user.id, nombre: data.user.nombre, rol: data.user.rol },
                 bubbles: true,
                 composed: true
             }));

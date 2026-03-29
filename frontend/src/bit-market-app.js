@@ -9,6 +9,7 @@ import './components/bm-admin-productos.js';
 
 export class BitMarketApp extends LitElement {
     static properties = {
+        id: { type: Number },
         rol: { type: String },
         view: { type: String }, // 'landing', 'auth', 'dashboard'
         authMode: { type: String }, // 'login' o 'registro'
@@ -20,6 +21,7 @@ export class BitMarketApp extends LitElement {
         const savedUser = JSON.parse(localStorage.getItem('bm_session'));
 
         if (savedUser && savedUser.rol) {
+            this.id = savedUser.id;
             this.rol = savedUser.rol;
             this.view = 'dashboard';
         } else {
@@ -34,23 +36,24 @@ export class BitMarketApp extends LitElement {
     }
 
     _goToDashboard(e) {
+        // 1. Extraemos los datos que vienen del componente login (e.detail)
+        if (e && e.detail) {
+            // IMPORTANTE: Si el backend devuelve { message, user: {...} }, 
+            // entonces la info real está en e.detail.user
+            const userData = e.detail.user || e.detail;
 
-        // Cambiamos la validación: ahora buscamos e.detail directamente
-        if (e && e.detail && e.detail.rol) {
-            const user = e.detail; // El usuario ES el detail directamente
+            console.log("Dato real del usuario:", userData);
 
-            // 1. Guardamos en LocalStorage
-            localStorage.setItem('bm_session', JSON.stringify(user));
+            // 2. Guardamos el objeto completo en LocalStorage
+            localStorage.setItem('bm_session', JSON.stringify(userData));
 
-            // 2. Seteamos propiedades reactivas
-            this.rol = user.rol;
+            // 3. Seteamos propiedades reactivas
+            this.id = userData.id;
+            this.rol = userData.rol;
             this.view = 'dashboard';
 
-            console.log("✅ Sesión iniciada");
-
+            console.log("✅ ID de sesión guardado:", this.id);
             this.requestUpdate();
-        } else {
-            console.error("❌ El evento no tiene la propiedad 'rol':", e.detail);
         }
     }
 
@@ -65,27 +68,27 @@ export class BitMarketApp extends LitElement {
             ${this.view === 'auth' ? html`
                 <section class="auth-container">
                     ${this.authMode === 'login'
-                                ? html`<bm-login @success="${(e) => this._goToDashboard(e)}"></bm-login>`
-                                : html`<bm-registro @success="${(e) => this._goToDashboard(e)}"></bm-registro>`
-                            }
+                    ? html`<bm-login @success="${(e) => this._goToDashboard(e)}"></bm-login>`
+                    : html`<bm-registro @success="${(e) => this._goToDashboard(e)}"></bm-registro>`
+                }
 
                     <div class="auth-toggle" style="text-align: center; margin-top: 20px; color: #fff;">
                         ${this.authMode === 'login'
-                                ? html`
+                    ? html`
                                 <p>¿No tienes cuenta? 
                                     <span @click="${() => this.authMode = 'registro'}" 
                                             style="color: #4CAF50; cursor: pointer; font-weight: bold; text-decoration: underline;">
                                         Regístrate aquí
                                     </span>
                                 </p>`
-                                : html`
+                    : html`
                                 <p>¿Ya tienes cuenta? 
                                     <span @click="${() => this.authMode = 'login'}" 
                                             style="color: #4CAF50; cursor: pointer; font-weight: bold; text-decoration: underline;">
                                         Inicia sesión
                                     </span>
                                 </p>`
-                            }
+                }
                         <button @click="${() => this.view = 'landing'}" 
                                 style="margin-top: 10px; background: none; border: none; color: #aaa; cursor: pointer;">
                             Volver al inicio

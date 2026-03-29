@@ -60,19 +60,47 @@ export class BmAdminProductos extends LitElement {
     async _cargarDatos() {
         this.loading = true;
         try {
-            const [resP, resC] = await Promise.all([
+            const [resProd, resCat] = await Promise.all([
                 fetch(`${API_URL}/productos`),
-                fetch(`${API_URL}/categorias`)
+                fetch(`${API_URL}/categorias/activas`)
             ]);
-            this.productos = await resP.json();
-            this.categoriasDisponibles = await resC.json();
+            this.productos = await resProd.json();
+            this.categoriasDisponibles = await resCat.json(); // Se guarda en la propiedad reactiva
         } catch (e) {
-            console.error("Error:", e);
+            console.error("Error cargando datos", e);
         } finally {
             this.loading = false;
         }
     }
+    //
+    /*_editarProducto(p) {
+    console.log("1. Datos crudos del producto (p):", p); //
+    
+    this.productoActual = {
+        ...p,
+        categorias: p.categoria_ids ? p.categoria_ids.filter(id => id !== null) : []
+    };
+    
+    console.log("2. IDs procesados en productoActual.categorias:", this.productoActual.categorias); //
+    this.isEditing = true;
+    this.requestUpdate();
+}*/
+    _editarProducto(p) {
+        console.log("Datos que llegan del botón editar:", p);
 
+        this.productoActual = {
+            ...p,
+            // Forzamos a que 'categorias' sea un array de números.
+            // Probamos con todas las variantes que el backend podría estar enviando:
+            
+            categorias: (p.categoria_ids || p.categorias || [])
+                .map(id => Number(id)) // Aseguramos que sean números para que el .includes(c.id) no falle
+                .filter(id => id !== 0 && !isNaN(id))
+        };
+        console.log("2. IDs procesados en productoActual.categorias:", this.productoActual.categorias); //
+        this.isEditing = true;
+        this.requestUpdate(); // Forzamos a Lit a ver el cambio
+    }
     render() {
         if (this.isEditing) return this._renderForm();
 
@@ -97,7 +125,10 @@ export class BmAdminProductos extends LitElement {
                             <thead>
                                 <tr>
                                     <th>Nombre</th>
+                                    <th>Imagen</th>
                                     <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th>Categoría</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -105,7 +136,15 @@ export class BmAdminProductos extends LitElement {
                             <tbody>
                                 ${this.productos.map(p => html`
                                     <tr>
-                                        <td>${p.nombre}</td> <td>$${p.precio}</td>
+                                        <td>${p.nombre}</td>
+                                        <td>
+                                            ${p.imagen_url
+                            ? html`<img src="${p.imagen_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">`
+                            : html`<span>No img</span>`}
+                                        </td>
+                                        <td>$${p.precio}</td>
+                                        <td>${p.stock}</td>
+                                        <td>${p.categoria_nombres ? p.categoria_nombres.join(', ') : 'Sin categoría'}</td>
                                         <td>
                                             <label class="switch">
                                                 <input type="checkbox" ?checked="${p.status_id === 1}" 
@@ -141,14 +180,43 @@ export class BmAdminProductos extends LitElement {
                     <input type="number" step="0.01" .value="${this.productoActual.precio || ''}" 
                         @input="${e => this.productoActual = { ...this.productoActual, precio: e.target.value }}" required>
 
+                    <div class="field">
+                        <label>Stock disponible</label>
+                        <input 
+                            type="number" 
+                            placeholder="Cantidad en almacén" 
+                            .value="${this.productoActual.stock || 0}" 
+                            @input="${e => this.productoActual.stock = parseInt(e.target.value) || 0}"
+                        >
+                    </div>
+
                     <label>Categorías:</label>
                     <div class="chips-container">
-                        ${this.categoriasDisponibles.map(c => html`
-                            <div class="chip ${this.productoActual.categorias?.includes(c.id) ? 'active' : ''}"
-                                @click="${() => this._toggleCategory(c.id)}">
-                                ${c.nombre}
-                            </div>
-                        `)}
+                        ${this.categoriasDisponibles.map(c => {
+            const idsActuales = this.productoActual.categorias || [];
+            //const isActive = idsActuales.includes(c.id);
+            // Dentro de tu .map de categorías disponibles:
+            const isActive = (this.productoActual.categorias || [])
+                .map(Number) // Convertir todo a número antes de comparar
+                .includes(Number(c.id));
+            // Este log te dirá si hay un mismatch de tipos (ej: 1 vs "1")
+            if (this.isEditing) {
+                console.log(`Chip ${c.nombre} (ID: ${c.id}) - ¿Está activo?:`, isActive, "Lista de IDs:", idsActuales);
+            }
+
+            return html`
+                                <div class="chip ${isActive ? 'active' : ''}"
+                                    @click="${() => this._toggleCategory(c.id)}">
+                                    ${c.nombre}
+                                </div>
+                            `;
+        })}
+                    </div>
+                    
+                    <div class="field">
+                        <label>Imagen del Producto</label>
+                        <input type="file" accept="image/*" @change="${this._handleImageUpload}">
+                        ${this.loadingImage ? html`<p>Subiendo...</p>` : ''}
                     </div>
 
                     <div style="margin-top: 20px;">
@@ -184,22 +252,48 @@ export class BmAdminProductos extends LitElement {
 
     async _saveProduct(e) {
         e.preventDefault();
+
+        // 1. PRIMERO declaramos la URL y el método (Esto soluciona el error)
         const method = this.productoActual.id ? 'PUT' : 'POST';
         const url = this.productoActual.id ? `${API_URL}/productos/${this.productoActual.id}` : `${API_URL}/productos`;
 
+        // 2. Obtenemos el usuario de la sesión correcta (tu localStorage usa 'bm_session')
+        const session = JSON.parse(localStorage.getItem('bm_session'));
+
+        // 2. Extraemos el ID explícitamente
+        const currentUserId = session?.id;
+        // Si no hay id en la sesión, avísale a la consola para que sepas qué pasa
+        if (!currentUserId) {
+            alert("⚠️ Sesión inválida. Por favor, sal y vuelve a entrar.");
+            return;
+        }
+
+        // 3. Preparamos los datos incluyendo la imagen_url y el ID del usuario
+        const datosAEnviar = {
+            ...this.productoActual,
+            user_id: currentUserId,      // Para el POST
+            usuario_id: currentUserId    // Para el PUT
+        };
+
+        console.log("Datos exactos que se envían al backend:", datosAEnviar);
+
+        // 4. Hacemos el envío de datos UNA sola vez
         try {
             const resp = await fetch(url, {
-                method,
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(this.productoActual)
+                body: JSON.stringify(datosAEnviar)
             });
 
             if (resp.ok) {
                 this.isEditing = false;
                 this._cargarDatos();
+            } else {
+                const errorData = await resp.json();
+                console.error("El servidor rechazó los datos:", errorData);
             }
         } catch (error) {
-            console.error("Error al guardar:", error);
+            console.error("Error de red al intentar guardar:", error);
         }
     }
 
@@ -212,6 +306,38 @@ export class BmAdminProductos extends LitElement {
             body: JSON.stringify({ status_id: nuevoEstado })
         });
         this._cargarDatos();
+    }
+
+    async _handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        this.loadingImage = true;
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'bitmarket_preset'); // Asegúrate que sea EXACTAMENTE este nombre en Cloudinary
+
+        try {
+
+            const cloudName = 'ddvit9qlh';
+            const resp = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await resp.json();
+
+            if (data.secure_url) {
+                this.productoActual = { ...this.productoActual, imagen_url: data.secure_url };
+                console.log("Imagen subida con éxito:", data.secure_url);
+            } else {
+                console.error("Error en la respuesta de Cloudinary:", data);
+            }
+        } catch (err) {
+            console.error("Error subiendo imagen:", err);
+        } finally {
+            this.loadingImage = false;
+        }
     }
 }
 customElements.define('bm-admin-productos', BmAdminProductos);

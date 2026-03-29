@@ -82,6 +82,7 @@ app.post('/api/login', async (req, res) => {
         const match = await bcrypt.compare(password, user.password);
         if (!match) return res.status(401).json({ error: "Contraseña incorrecta" });
 
+        console.log(`ID Usuario: ${user.id}`);
         console.log(`Usuario: ${user.email} | role_id en DB: ${user.role_id}`);
 
         const rolAsignado = (user.role_id == 1 || user.role_id == 2) ? 'admin' : 'cliente';
@@ -89,6 +90,7 @@ app.post('/api/login', async (req, res) => {
         return res.json({
             message: "¡Bienvenido de nuevo!",
             user: {
+                id: user.id,
                 nombre: user.nombre,
                 email: user.email,
                 rol: rolAsignado
@@ -153,9 +155,20 @@ app.patch('/api/categorias/:id/desactivar', async (req, res) => {
 
 // --- Sección de productos ---
 
+// Actualiza este endpoint en index.js
 app.get('/api/productos', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM products WHERE status_id = 1 ORDER BY id DESC');
+        const query = `
+            SELECT p.*, 
+                    ARRAY_AGG(c.nombre) AS categoria_nombres,
+                    ARRAY_AGG(c.id) AS categoria_ids
+            FROM products p
+            LEFT JOIN product_categories pc ON p.id = pc.product_id
+            LEFT JOIN categories c ON pc.category_id = c.id
+            GROUP BY p.id
+            ORDER BY p.id DESC
+        `;
+        const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
         console.error('❌ Error al traer productos:', err);
@@ -163,37 +176,43 @@ app.get('/api/productos', async (req, res) => {
     }
 });
 
+
 app.post('/api/productos', async (req, res) => {
-    const { nombre, descripcion, precio, imagen_url, categorias, usuario_id } = req.body;
+    const { nombre, descripcion, precio, stock, imagen_url, categorias, user_id } = req.body;
     const client = await pool.connect();
 
     try {
         await client.query('BEGIN');
 
-        // 1. Insertar en products
-        const resProd = await client.query(
-            'INSERT INTO products (nombre, descripcion, precio, imagen_url, status_id) VALUES ($1, $2, $3, $4, 1) RETURNING id',
-            [nombre, descripcion, precio, imagen_url]
+        // 1. Insertar el producto con la URL de la imagen
+        const productRes = await client.query(
+            'INSERT INTO products (nombre, descripcion, precio, stock, imagen_url) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+            [nombre, descripcion, precio, stock, imagen_url]
         );
-        const nuevoId = resProd.rows[0].id;
+        const productId = productRes.rows[0].id;
 
-        // 2. Insertar categorías múltiples (product_categories)
-        for (let catId of categorias) {
-            await client.query('INSERT INTO product_categories (product_id, category_id) VALUES ($1, $2)', [nuevoId, catId]);
+        // 2. Insertar categorías en la tabla intermedia
+        if (categorias && categorias.length > 0) {
+            for (const catId of categorias) {
+                await client.query(
+                    'INSERT INTO product_categories (product_id, category_id) VALUES ($1, $2)',
+                    [productId, catId]
+                );
+            }
         }
 
-        // 3. Registrar primer historial (Precio anterior = 0)
+        // 3. Registrar en historial de precios (usando user_id)
         await client.query(
-            'INSERT INTO price_history (product_id, user_id, precio_anterior, precio_nuevo, fecha_cambio) VALUES ($1, $2, 0, $3, NOW())',
-            [nuevoId, usuario_id, precio]
+            'INSERT INTO price_history (product_id, user_id, precio_anterior, precio_nuevo) VALUES ($1, $2, $3, $4)',
+            [productId, user_id || null, 0, precio]
         );
 
         await client.query('COMMIT');
-        res.status(201).json({ id: nuevoId, message: "Producto creado con éxito" });
+        res.status(201).json({ message: 'Producto creado con éxito', id: productId });
     } catch (err) {
         await client.query('ROLLBACK');
         console.error(err);
-        res.status(500).json({ error: "Fallo al crear producto" });
+        res.status(500).json({ error: 'Error al registrar el producto' });
     } finally {
         client.release();
     }
@@ -201,7 +220,7 @@ app.post('/api/productos', async (req, res) => {
 
 app.put('/api/productos/:id', async (req, res) => {
     const { id } = req.params;
-    const { nombre, descripcion, precio, imagen_url, categorias, usuario_id } = req.body;
+    const { nombre, descripcion, precio, stock, imagen_url, categorias, usuario_id } = req.body;
     const client = await pool.connect();
 
     try {
@@ -213,8 +232,8 @@ app.put('/api/productos/:id', async (req, res) => {
 
         // 2. Actualizar tabla products
         await client.query(
-            'UPDATE products SET nombre = $1, descripcion = $2, precio = $3, imagen_url = $4 WHERE id = $5',
-            [nombre, descripcion, precio, imagen_url, id]
+            'UPDATE products SET nombre = $1, descripcion = $2, precio = $3, stock=$4, imagen_url = $5 WHERE id = $6',
+            [nombre, descripcion, precio, stock || 0, imagen_url, id]
         );
 
         // 3. Si el precio cambió, registramos el historial de quién fue
@@ -252,6 +271,19 @@ app.get('/api/productos/destacados', async (req, res) => {
 });
 
 
+// Endpoint para rescatar las categorías activas
+app.get('/api/categorias/activas', async (req, res) => {
+    try {
+        // Filtramos por status_id = 1 (Activo) según tu esquema
+        const result = await pool.query(
+            'SELECT id, nombre FROM categories WHERE status_id = 1 ORDER BY nombre ASC'
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error('❌ Error al obtener categorías activas:', err);
+        res.status(500).json({ error: 'Error al cargar categorías' });
+    }
+});
 
 // Endpoint Universal para cambiar estados (Baja Lógica)
 app.patch('/api/:tabla/:id/status', async (req, res) => {
