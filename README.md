@@ -33,6 +33,7 @@ Utilizamos **Conventional Commits** para mantener un historial limpio:
 
 ### Frontend
 - **Framework:** [Lit](https://lit.dev/) (Web Components livianos y nativos).
+- **Animaciones:** [@lit-labs/motion](https://www.npmjs.com/package/@lit-labs/motion) (Transiciones declarativas y fluidas para una mejor UX).. 
 - **Validación de Datos:** [Zod](https://zod.dev/) (Esquemas de tipado fuerte).
 - **Bundler:** [Vite](https://vitejs.dev/).
 

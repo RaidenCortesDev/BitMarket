@@ -84,6 +84,7 @@ app.post('/api/login', async (req, res) => {
 
         console.log(`ID Usuario: ${user.id}`);
         console.log(`Usuario: ${user.email} | role_id en DB: ${user.role_id}`);
+        console.log(`saldo: ${user.saldo} `);
 
         const rolAsignado = (user.role_id == 1 || user.role_id == 2) ? 'admin' : 'cliente';
 
@@ -93,7 +94,8 @@ app.post('/api/login', async (req, res) => {
                 id: user.id,
                 nombre: user.nombre,
                 email: user.email,
-                rol: rolAsignado
+                rol: rolAsignado,
+                saldo: user.saldo
             }
         });
     } catch (err) {
@@ -339,7 +341,7 @@ app.patch('/api/:tabla/:id/status', async (req, res) => {
     }
 });
 
-// Endpoint Universal para cambiar estados (Baja Lógica)
+// Endpoint Para el Wallet
 
 app.post('/api/wallet/recharge', async (req, res) => {
     const { emitter_id, target_user_id, monto, descripcion } = req.body;
@@ -396,6 +398,18 @@ app.post('/api/wallet/recharge', async (req, res) => {
     }
 });
 
+// Endpoint para obtener el saldo de un usuario específico
+app.get('/api/usuarios/:id/saldo', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query('SELECT saldo FROM users WHERE id = $1', [id]);
+        if (result.rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
+        
+        res.json({ saldo: result.rows[0].saldo });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // --- Encendido del log del backend ---
 const PORT = process.env.PORT || 3000;

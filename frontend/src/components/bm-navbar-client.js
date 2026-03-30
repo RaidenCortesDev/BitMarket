@@ -18,19 +18,20 @@ export class BmNavbarClient extends LitElement {
         return html`
         <nav>
             <ul>
-                <li @click="${() => this._notificar('inicio')}">Inicio</li>
-                <li @click="${() => this._notificar('productos')}">Productos</li>
-                <li @click="${() => this._notificar('pedidos')}">Mis Pedidos</li>
-                <li @click="${() => this._notificar('carrito')}">🛒 Carrito</li>
+                <li @click="${() => this._changeSection('inicio')}">Inicio</li>
+                <li @click="${() => this._changeSection('carrito')}">🛒 Carrito</li>
+                <li @click="${() => this._changeSection('wallet')}">Wallet</li>
             </ul>
         </nav>
         `;
     }
 
-    _notificar(seccion) {
-        console.log("Cambiando a:", seccion);
-        // Por ahora solo mandamos un aviso, luego haremos que cambie el contenido
-        alert("Próximamente verás aquí: " + seccion);
+    _changeSection(seccion) {
+        this.dispatchEvent(new CustomEvent('admin-nav', {
+            detail: { seccion: seccion },
+            bubbles: true,
+            composed: true
+        }));
     }
 }
 customElements.define('bm-navbar-client', BmNavbarClient);

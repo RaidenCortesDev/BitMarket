@@ -7,7 +7,8 @@ import './components/bm-login.js';
 import './components/bm-admin-categorias.js';
 import './components/bm-admin-productos.js';
 import './components/bm-admin-wallet.js';
-import './components/bm-destacados.js'; 
+import './components/bm-destacados.js';
+import './components/bm-cliente-wallet.js';
 
 export class BitMarketApp extends LitElement {
 
@@ -59,10 +60,14 @@ export class BitMarketApp extends LitElement {
 
     static properties = {
         id: { type: Number },
+        nombre: { type: String },
+        correo: { type: String },
         rol: { type: String },
         view: { type: String }, // 'landing', 'auth', 'dashboard'
         authMode: { type: String }, // 'login' o 'registro'
-        adminSection: { type: String }
+        adminSection: { type: String },
+        clientSection: { type: String },
+        saldo: { type: Number }
     };
 
 
@@ -73,12 +78,28 @@ export class BitMarketApp extends LitElement {
 
         if (savedUser && savedUser.rol) {
             this.id = savedUser.id;
+            this.nombre = savedUser.nombre;
             this.rol = savedUser.rol;
+            this.correo = savedUser.email || savedUser.correo;
+            // Importante: Volver a convertir a número al leer de localStorage
+            this.saldo = Number(savedUser.saldo || 0);
             this.view = 'dashboard';
         } else {
             this.rol = 'cliente';
             this.view = 'landing';
         }
+    }
+    // En el constructor o connectedCallback añade el listener
+    connectedCallback() {
+        super.connectedCallback();
+        this.addEventListener('update-balance-global', (e) => {
+            this.saldo = e.detail.saldo; // Actualizamos el estado global
+        });
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this.removeEventListener('update-balance', this._actualizarSaldo.bind(this));
     }
 
     _goToAuth(mode) {
@@ -87,24 +108,65 @@ export class BitMarketApp extends LitElement {
     }
 
     _goToDashboard(e) {
-        // 1. Extraemos los datos que vienen del componente login (e.detail)
         if (e && e.detail) {
-            // IMPORTANTE: Si el backend devuelve { message, user: {...} }, 
-            // entonces la info real está en e.detail.user
+            // El backend envía { message: "...", user: { ... } }
+            // Por lo tanto, los datos reales están en e.detail.user
             const userData = e.detail.user || e.detail;
 
-            console.log("Dato real del usuario:", userData);
+            console.log("📥 Datos puros recibidos:", e.detail); // Para ver el JSON real
+            console.log("👤 Objeto de usuario extraído:", userData);
 
-            // 2. Guardamos el objeto completo en LocalStorage
-            localStorage.setItem('bm_session', JSON.stringify(userData));
-
-            // 3. Seteamos propiedades reactivas
+            // 1. Asignación con nombres correctos (email vs correo)
             this.id = userData.id;
+            this.nombre = userData.nombre;
+            this.correo = userData.email || userData.correo; // Acepta ambos por seguridad
             this.rol = userData.rol;
+
+            // 2. Procesamiento de saldo
+            // Usamos Number() porque es más limpio para monedas
+            const saldoCrudo = userData.saldo;
+            this.saldo = this.rol === 'cliente' ? Number(saldoCrudo || 0) : 0;
+
             this.view = 'dashboard';
 
-            console.log("✅ ID de sesión guardado:", this.id);
+            // 3. Persistencia
+            // Guardamos el objeto tal cual lo procesamos para que el constructor lo lea bien
+            localStorage.setItem('bm_session', JSON.stringify({
+                id: this.id,
+                nombre: this.nombre,
+                email: this.correo,
+                rol: this.rol,
+                saldo: this.saldo
+            }));
+
+            console.log(`✅ Sesión iniciada para: ${this.nombre}. Saldo: ${this.saldo}`);
             this.requestUpdate();
+        }
+    }
+
+
+    async _actualizarSaldo() {
+        if (!this.id) return;
+
+        try {
+            // Asegúrate de usar la URL correcta de tu API. 
+            // Si usas un archivo de config, impórtalo, o pon la ruta directa.
+            const response = await fetch(`${API_URL}/usuarios/${this.id}/saldo`);
+
+            if (response.ok) {
+                const data = await response.json();
+                this.saldo = Number(data.saldo); // Convertimos a número por seguridad
+
+                // Actualizamos el localStorage para que F5 no regrese el saldo viejo
+                const session = JSON.parse(localStorage.getItem('bm_session')) || {};
+                session.saldo = this.saldo;
+                localStorage.setItem('bm_session', JSON.stringify(session));
+
+                console.log("💰 Saldo actualizado dinámicamente:", this.saldo);
+                this.requestUpdate(); // Forzamos a Lit a re-dibujar la interfaz
+            }
+        } catch (error) {
+            console.error("❌ Error al refrescar el saldo:", error);
         }
     }
 
@@ -113,6 +175,7 @@ export class BitMarketApp extends LitElement {
             <bm-header 
                 .rol="${this.rol}" 
                 .view="${this.view}"
+                .saldo="${this.saldo}"
                 @open-login="${() => this._goToAuth('login')}"
                 @logout="${this._logout}"
                 @nav-home="${() => this.view = 'landing'}"
@@ -125,27 +188,27 @@ export class BitMarketApp extends LitElement {
                 ${this.view === 'auth' ? html`
                     <section class="auth-container">
                         ${this.authMode === 'login'
-                            ? html`<bm-login @success="${(e) => this._goToDashboard(e)}"></bm-login>`
-                            : html`<bm-registro @success="${(e) => this._goToDashboard(e)}"></bm-registro>`
-                        }
+                    ? html`<bm-login @success="${(e) => this._goToDashboard(e)}"></bm-login>`
+                    : html`<bm-registro @success="${(e) => this._goToDashboard(e)}"></bm-registro>`
+                }
 
                         <div class="auth-toggle" style="text-align: center; margin-top: 20px; color: #fff;">
                             ${this.authMode === 'login'
-                            ? html`
+                    ? html`
                                     <p>¿No tienes cuenta? 
                                         <span @click="${() => this.authMode = 'registro'}" 
                                             style="color: #4CAF50; cursor: pointer; font-weight: bold; text-decoration: underline;">
                                             Regístrate aquí
                                         </span>
                                     </p>`
-                            : html`
+                    : html`
                                     <p>¿Ya tienes cuenta? 
                                         <span @click="${() => this.authMode = 'login'}" 
                                             style="color: #4CAF50; cursor: pointer; font-weight: bold; text-decoration: underline;">
                                             Inicia sesión
                                         </span>
                                     </p>`
-                        }
+                }
                         </div>
                     </section>
                 ` : ''}
@@ -155,32 +218,46 @@ export class BitMarketApp extends LitElement {
             `;
     }
 
-_renderDashboard() {
-    return html`
+    _renderDashboard() {
+        return html`
         <div class="dashboard-container"> <div class="dashboard-content">
                 ${this.rol === 'admin'
-                    ? html`
+                ? html`
                         <section class="admin-tools">
                             <h2>Panel Admin: <span style="color: #4CAF50">${this.adminSection || 'Inicio'}</span></h2>
                             ${this.adminSection === 'categorias'
-                                ? html`<bm-admin-categorias></bm-admin-categorias>`
-                                : this.adminSection === 'productos'
-                                    ? html`<bm-admin-productos></bm-admin-productos>`
-                                    : this.adminSection === 'wallet'
-                                        ? html`<bm-admin-wallet></bm-admin-wallet>`
-                                        : html`<p>Bienvenido al centro de control.</p>`
-                            }
+                        ? html`<bm-admin-categorias></bm-admin-categorias>`
+                        : this.adminSection === 'productos'
+                            ? html`<bm-admin-productos></bm-admin-productos>`
+                            : this.adminSection === 'wallet'
+                                ? html`<bm-admin-wallet></bm-admin-wallet>`
+                                : html`<p>Bienvenido al centro de control.</p>`
+                    }
                         </section>`
-                    : html`
+                : html`
                         <section class="client-shop">
-                            <h2>¡Hola de nuevo!</h2>
-                            <p>Explora los mejores periféricos del mercado.</p>
-                        </section>`
-                }
+                            <h2><span style="color: #80deea">${this.adminSection || 'Inicio'}</span></h2>
+                            
+                            ${this.adminSection === 'wallet'
+                        ? html`
+                                <bm-cliente-wallet 
+                                    .userId="${this.id}" 
+                                    .saldo="${this.saldo}"
+                                    @update-balance="${() => this._actualizarSaldo()}">
+                                </bm-cliente-wallet>
+                            `
+                        : html`
+                                    <h2>¡Hola de nuevo!</h2>
+                                    <p>Explora los mejores periféricos del mercado.</p>
+                                    <bm-destacados></bm-destacados>
+                                `
+                    }
+                            </section>`
+            }
             </div>
         </div>
     `;
-}
+    }
     _renderLanding() {
         return html`
             <section class="hero">
