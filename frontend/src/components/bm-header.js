@@ -1,62 +1,118 @@
 import { LitElement, html, css } from 'lit';
 
 export class BmHeader extends LitElement {
+    static properties = {
+        rol: { type: String },
+        view: { type: String },
+        adminSection: { type: String }
+    };
+
     static styles = css`
+        :host {
+            display: block;
+            width: 100%;
+            background: #1a1a1a; /* Color del navbar */
+            border-bottom: 1px solid #333;
+        }
         header {
-            background: #1a1a1a;
-            color: white;
-            padding: 1rem 2rem;
+            max-width: 1400px; /* Aquí es donde limitamos el contenido */
+            margin: 0 auto;
+            padding: 0.8rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #333;
         }
         .logo { 
             font-weight: bold; 
-            font-size: 1.5rem; 
+            font-size: 1.6rem; 
             color: #4CAF50; 
             cursor: pointer;
+            user-select: none;
         }
-        .nav-links {
+        
+        /* Contenedor central para las Navbars */
+        .nav-center {
+            flex-grow: 1;
             display: flex;
-            gap: 20px;
+            justify-content: center;
         }
-        .login-btn {
+
+        .auth-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Botón de Apagado Estilizado */
+        .btn-logout {
+            background: #442727;
+            color: #ff5252;
+            border: 1px solid #ff5252;
+            padding: 6px 12px;
+            border-radius: 6px;
             cursor: pointer;
-            color: #4CAF50;
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             transition: 0.3s;
         }
-        .login-btn:hover {
-            text-shadow: 0 0 10px #4CAF50;
+        .btn-logout:hover {
+            background: #ff5252;
+            color: white;
+        }
+
+        .login-link {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
         }
     `;
 
+    _handleLogoClick() {
+        if (this.view !== 'dashboard') {
+            this.dispatchEvent(new CustomEvent('nav-home', { bubbles: true, composed: true }));
+        } else {
+            // Si ya está en dashboard, resetea la sección a inicio
+            this.dispatchEvent(new CustomEvent('admin-nav', {
+                detail: { seccion: 'inicio' }, bubbles: true, composed: true
+            }));
+        }
+    }
+
+    _logout() {
+        this.dispatchEvent(new CustomEvent('logout', { bubbles: true, composed: true }));
+    }
+
     render() {
+        const isLoggedIn = this.view === 'dashboard';
+
         return html`
         <header>
-            <div class="logo" @click="${() => this._dispatchNav('home')}">BitMarket</div>
-            <div class="nav-links">
-                <div class="login-btn" @click="${this._handleLoginClick}">Mi Cuenta / Login</div>
+            <div class="logo" @click="${this._handleLogoClick}">BitMarket</div>
+
+            <div class="nav-center">
+                ${isLoggedIn ? html`
+                    ${this.rol === 'admin'
+                    ? html`<bm-navbar-admin></bm-navbar-admin>`
+                    : html`<bm-navbar-client></bm-navbar-client>`}
+                ` : ''}
+            </div>
+
+            <div class="auth-section">
+                ${isLoggedIn ? html`
+                    <button class="btn-logout" @click="${this._logout}">
+                        <span style="font-size: 1.2rem;">⏻</span> Cerrar Sesión
+                    </button>
+                ` : html`
+                    <span class="login-link" @click="${() => this.dispatchEvent(new CustomEvent('open-login'))}">
+                        Mi Cuenta / Login
+                    </span>
+                `}
             </div>
         </header>
         `;
-    }
-
-    _handleLoginClick() {
-        // Disparamos un evento genérico para que la App decida qué mostrar
-        this.dispatchEvent(new CustomEvent('open-login', { 
-            bubbles: true, 
-            composed: true 
-        }));
-    }
-
-    _dispatchNav(view) {
-        this.dispatchEvent(new CustomEvent('change-view', { 
-            detail: { view }, 
-            bubbles: true, 
-            composed: true 
-        }));
     }
 }
 customElements.define('bm-header', BmHeader);

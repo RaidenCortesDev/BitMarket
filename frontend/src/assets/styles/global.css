@@ -10,10 +10,15 @@
 /* Variables de CSS para reutilizar en tus componentes de Lit */
 :root {
     --main-font: 'Montserrat', sans-serif;
-    --bg-color: #0d0d0d;
+    --bg-color: #1a1a1a;
     --text-color: #f2f2f2;
-    --accent-color: #00d4ff;
-    /* Un azul cyan tipo "Bit" */
+    --accent-color: #3a843c;
+    --container-width: 90%; /* Ocupará el 90% de cualquier pantalla */
+    --max-allowed-width: 1600px; /* Pero nunca más de esto para no estirar de más */
+    --max-width: 1200px;
+    --container-padding: 2rem;
+    --tablet: 768px;
+    --mobile: 480px;
 }
 
 body {

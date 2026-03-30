@@ -9,6 +9,53 @@ import './components/bm-admin-productos.js';
 import './components/bm-admin-wallet.js';
 
 export class BitMarketApp extends LitElement {
+
+
+    static styles = css`
+        :host {
+            display: block;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+        }
+
+        main {
+            width: 100%; 
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Contenedor del Dashboard: asegura que el fondo sea total */
+        .dashboard-container {
+            width: 100%;
+            min-height: calc(100vh - 80px); /* Ajusta según el alto de tu header */
+            background-color: var(--bg-color);
+        }
+
+        /* Contenido del Dashboard: AQUÍ limitamos el ancho para que no se vea "estirado" */
+        .dashboard-content {
+            max-width: var(--max-allowed-width, 1600px);
+            margin: 0 auto;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-content {
+                padding: 1rem;
+            }
+        }
+
+        .auth-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+        }
+    `;
+
+
     static properties = {
         id: { type: Number },
         rol: { type: String },
@@ -16,6 +63,8 @@ export class BitMarketApp extends LitElement {
         authMode: { type: String }, // 'login' o 'registro'
         adminSection: { type: String }
     };
+
+
 
     constructor() {
         super();
@@ -60,101 +109,77 @@ export class BitMarketApp extends LitElement {
 
     render() {
         return html`
-        <bm-header @open-login="${() => this._goToAuth('login')}"></bm-header>
+            <bm-header 
+                .rol="${this.rol}" 
+                .view="${this.view}"
+                @open-login="${() => this._goToAuth('login')}"
+                @logout="${this._logout}"
+                @nav-home="${() => this.view = 'landing'}"
+                @admin-nav="${(e) => this.adminSection = e.detail.seccion}">
+            </bm-header>
 
-        <main>
-            ${this.view === 'landing' ? this._renderLanding() : ''}
-            
-
-            ${this.view === 'auth' ? html`
-                <section class="auth-container">
-                    ${this.authMode === 'login'
-                    ? html`<bm-login @success="${(e) => this._goToDashboard(e)}"></bm-login>`
-                    : html`<bm-registro @success="${(e) => this._goToDashboard(e)}"></bm-registro>`
-                }
-
-                    <div class="auth-toggle" style="text-align: center; margin-top: 20px; color: #fff;">
+            <main>
+                ${this.view === 'landing' ? this._renderLanding() : ''}
+                
+                ${this.view === 'auth' ? html`
+                    <section class="auth-container">
                         ${this.authMode === 'login'
+                            ? html`<bm-login @success="${(e) => this._goToDashboard(e)}"></bm-login>`
+                            : html`<bm-registro @success="${(e) => this._goToDashboard(e)}"></bm-registro>`
+                        }
+
+                        <div class="auth-toggle" style="text-align: center; margin-top: 20px; color: #fff;">
+                            ${this.authMode === 'login'
+                            ? html`
+                                    <p>¿No tienes cuenta? 
+                                        <span @click="${() => this.authMode = 'registro'}" 
+                                            style="color: #4CAF50; cursor: pointer; font-weight: bold; text-decoration: underline;">
+                                            Regístrate aquí
+                                        </span>
+                                    </p>`
+                            : html`
+                                    <p>¿Ya tienes cuenta? 
+                                        <span @click="${() => this.authMode = 'login'}" 
+                                            style="color: #4CAF50; cursor: pointer; font-weight: bold; text-decoration: underline;">
+                                            Inicia sesión
+                                        </span>
+                                    </p>`
+                        }
+                        </div>
+                    </section>
+                ` : ''}
+
+                ${this.view === 'dashboard' ? this._renderDashboard() : ''}
+            </main>
+            `;
+    }
+
+_renderDashboard() {
+    return html`
+        <div class="dashboard-container"> <div class="dashboard-content">
+                ${this.rol === 'admin'
                     ? html`
-                                <p>¿No tienes cuenta? 
-                                    <span @click="${() => this.authMode = 'registro'}" 
-                                            style="color: #4CAF50; cursor: pointer; font-weight: bold; text-decoration: underline;">
-                                        Regístrate aquí
-                                    </span>
-                                </p>`
+                        <section class="admin-tools">
+                            <h2>Panel Admin: <span style="color: #4CAF50">${this.adminSection || 'Inicio'}</span></h2>
+                            ${this.adminSection === 'categorias'
+                                ? html`<bm-admin-categorias></bm-admin-categorias>`
+                                : this.adminSection === 'productos'
+                                    ? html`<bm-admin-productos></bm-admin-productos>`
+                                    : this.adminSection === 'wallet'
+                                        ? html`<bm-admin-wallet></bm-admin-wallet>`
+                                        : html`<p>Bienvenido al centro de control.</p>`
+                            }
+                        </section>`
                     : html`
-                                <p>¿Ya tienes cuenta? 
-                                    <span @click="${() => this.authMode = 'login'}" 
-                                            style="color: #4CAF50; cursor: pointer; font-weight: bold; text-decoration: underline;">
-                                        Inicia sesión
-                                    </span>
-                                </p>`
+                        <section class="client-shop">
+                            <h2>¡Hola de nuevo!</h2>
+                            <p>Explora los mejores periféricos del mercado.</p>
+                        </section>`
                 }
-                        <button @click="${() => this.view = 'landing'}" 
-                                style="margin-top: 10px; background: none; border: none; color: #aaa; cursor: pointer;">
-                            Volver al inicio
-                        </button>
-                    </div>
-                </section>
-            ` : ''}
-
-            ${this.view === 'dashboard' ? this._renderDashboard() : ''}
-        </main>
-        `;
-    }
-
-    // Para cerrar sesión
-    _logout() {
-        localStorage.removeItem('bm_session');
-        this.view = 'landing';
-        this.rol = 'cliente';
-    }
-
-
-    _renderDashboard() {
-        return html`
-    ${this.rol === 'admin'
-                ? html`<bm-navbar-admin @admin-nav="${(e) => this.adminSection = e.detail.seccion}"></bm-navbar-admin>`
-                : html`<bm-navbar-client></bm-navbar-client>`}
-    
-    <main class="dashboard-container">
-        <header>
-            <h2>Bienvenido, <span style="color: #4CAF50">${this.rol}</span> (${this.adminSection || 'inicio'})</h2>
-            <button @click="${this._logout}">Cerrar Sesión</button>
-        </header>
-
-        <div class="dashboard-content">
-            ${this.rol === 'admin'
-                        ? html`
-                            <section class="admin-tools">
-                                ${this.adminSection === 'categorias'
-                                    ? html`<bm-admin-categorias></bm-admin-categorias>`
-                                    : this.adminSection === 'productos'
-                                        ? html`<bm-admin-productos></bm-admin-productos>`
-                                        : this.adminSection === 'wallet' // Aquí es donde entra la Wallet
-                                            ? html`
-                                                <bm-admin-wallet></bm-admin-wallet>`
-                                            : html`
-                                                <h3>Gestión de Inventario (Modo Admin)</h3>
-                                                <p>Selecciona una opción en la barra roja superior para empezar.</p>`
-                                }
-                            </section>`
-                        : html`
-                            <section class="client-shop">
-                                <h3>Explora nuestro catálogo (Modo Cliente)</h3>
-                                <p>Aquí saldrán TODOS los productos con botón de carrito.</p>
-                            </section>`
-                    }
+            </div>
         </div>
-    </main>
-
-    <style>
-        .dashboard-container { padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; }
-        .admin-tools { border: 2px solid #B39DDB; padding: 10px; }
-    </style>
     `;
-    }
+}
     _renderLanding() {
         return html`
             <section class="hero">
@@ -203,6 +228,13 @@ export class BitMarketApp extends LitElement {
                 }
             </style>
     `;
+    }
+
+    // Para cerrar sesión
+    _logout() {
+        localStorage.removeItem('bm_session');
+        this.view = 'landing';
+        this.rol = 'cliente';
     }
 }
 customElements.define('bit-market-app', BitMarketApp);

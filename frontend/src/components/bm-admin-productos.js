@@ -9,8 +9,7 @@ export class BmAdminProductos extends LitElement {
         isEditing: { type: Boolean },
         productoActual: { type: Object }
     };
-
-    // ... (Estilos CSS se mantienen igual) ...
+    
     static styles = css`
         :host { display: block; color: white; }
         .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
