@@ -7,6 +7,7 @@ import './components/bm-login.js';
 import './components/bm-admin-categorias.js';
 import './components/bm-admin-productos.js';
 import './components/bm-admin-wallet.js';
+import './components/bm-destacados.js'; 
 
 export class BitMarketApp extends LitElement {
 
@@ -194,6 +195,9 @@ _renderDashboard() {
 
             <section class="products-section">
                 <h2>🔥 Los más buscados</h2>
+                <div class="product-grid">
+                    <bm-destacados></bm-destacados>
+                </div>
                 <div class="product-grid">
                     <p>Inicia sesión para ver nuestras ofertas exclusivas.</p>
                 </div>
