@@ -18,7 +18,7 @@ export class BmNavbarClient extends LitElement {
         return html`
         <nav>
             <ul>
-                <li @click="${() => this._changeSection('inicio')}">Inicio</li>
+                <li @click="${() => this._changeSection('tienda')}">Tienda</li>
                 <li @click="${() => this._changeSection('carrito')}">🛒 Carrito</li>
                 <li @click="${() => this._changeSection('wallet')}">Wallet</li>
             </ul>

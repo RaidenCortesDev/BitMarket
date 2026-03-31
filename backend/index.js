@@ -157,7 +157,6 @@ app.patch('/api/categorias/:id/desactivar', async (req, res) => {
 
 // --- Sección de productos ---
 
-// Actualiza este endpoint en index.js
 app.get('/api/productos', async (req, res) => {
     try {
         const query = `
@@ -169,6 +168,28 @@ app.get('/api/productos', async (req, res) => {
             LEFT JOIN product_categories pc ON p.id = pc.product_id
             LEFT JOIN categories c ON pc.category_id = c.id
             GROUP BY p.id
+            ORDER BY p.id DESC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('❌ Error al traer productos:', err);
+        res.status(500).json({ error: 'Error al cargar el inventario' });
+    }
+});
+
+app.get('/api/productos/publicos', async (req, res) => {
+    try {
+        const query = `
+            SELECT p.*,
+                    ARRAY_AGG(c.id) FILTER (WHERE c.id IS NOT NULL) as categoria_ids, 
+                    ARRAY_AGG(c.nombre) AS categoria_nombres,
+                    ARRAY_AGG(c.id) AS categoria_ids
+            FROM products p
+            LEFT JOIN product_categories pc ON p.id = pc.product_id
+            LEFT JOIN categories c ON pc.category_id = c.id
+            WHERE p.status_id = 1
+			GROUP BY p.id
             ORDER BY p.id DESC
         `;
         const result = await pool.query(query);
@@ -406,6 +427,65 @@ app.get('/api/usuarios/:id/saldo', async (req, res) => {
         if (result.rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
         
         res.json({ saldo: result.rows[0].saldo });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/carrito/add', async (req, res) => {
+    // Forzamos la extracción y conversión a entero
+    const usuer_id = parseInt(req.body.usuer_id);
+    const product_id = parseInt(req.body.product_id);
+    const cantidad = parseInt(req.body.cantidad) || 1;
+
+    console.log("DEBUG - Procesando registro:", { usuer_id, product_id, cantidad });
+
+    // Verificación de seguridad manual antes de enviar a SQL
+    if (isNaN(usuer_id) || isNaN(product_id)) {
+        return res.status(400).json({ 
+            error: "Los IDs deben ser números válidos",
+            recibido: req.body 
+        });
+    }
+
+    try {
+        const query = `
+            INSERT INTO carrito_compras (usuer_id, product_id, cantidad)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (usuer_id, product_id) 
+            DO UPDATE SET cantidad = $3
+            RETURNING *;
+        `;
+        // Pasamos las variables ya validadas y convertidas
+        const result = await pool.query(query, [usuer_id, product_id, cantidad]);
+        
+        res.json({ 
+            message: "Carrito actualizado correctamente", 
+            item: result.rows[0] 
+        });
+    } catch (err) {
+        console.error("❌ Error en SQL:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Eliminar del carrito
+app.delete('/api/carrito/remove/:userId/:productId', async (req, res) => {
+    const { userId, productId } = req.params;
+    try {
+        await pool.query('DELETE FROM carrito_compras WHERE usuer_id = $1 AND product_id = $2', [userId, productId]);
+        res.json({ message: "Producto eliminado del carrito" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Obtener el carrito completo de un usuario
+app.get('/api/carrito/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const result = await pool.query('SELECT * FROM carrito_compras WHERE usuer_id = $1', [userId]);
+        res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

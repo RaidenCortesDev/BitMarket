@@ -88,13 +88,23 @@ export class BmHeader extends LitElement {
     `;
 
     _handleLogoClick() {
+
         if (this.view !== 'dashboard') {
             this.dispatchEvent(new CustomEvent('nav-home', { bubbles: true, composed: true }));
-        } else {
-            this.dispatchEvent(new CustomEvent('admin-nav', {
-                detail: { seccion: 'inicio' }, bubbles: true, composed: true
-            }));
+            return;
         }
+
+        let seccionDestino = 'inicio';
+
+        if (this.rol === 'cliente') {
+            seccionDestino = 'tienda';
+        }
+
+        this.dispatchEvent(new CustomEvent('admin-nav', {
+            detail: { seccion: seccionDestino },
+            bubbles: true,
+            composed: true
+        }));
     }
 
     _logout() {

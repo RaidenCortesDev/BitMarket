@@ -9,6 +9,9 @@ import './components/bm-admin-productos.js';
 import './components/bm-admin-wallet.js';
 import './components/bm-destacados.js';
 import './components/bm-cliente-wallet.js';
+import './components/bm-cliente-tienda.js';
+import './components/bm-cliente-carrito.js';
+
 
 export class BitMarketApp extends LitElement {
 
@@ -179,7 +182,12 @@ export class BitMarketApp extends LitElement {
                 @open-login="${() => this._goToAuth('login')}"
                 @logout="${this._logout}"
                 @nav-home="${() => this.view = 'landing'}"
-                @admin-nav="${(e) => this.adminSection = e.detail.seccion}">
+                @admin-nav="${(e) => {
+                            // Forzamos que adminSection cambie para ambos (admin y cliente)
+                            this.adminSection = e.detail.seccion;
+                            console.log("Navegando a:", this.adminSection);
+                            this.requestUpdate();
+                        }}">
             </bm-header>
 
             <main>
@@ -218,46 +226,62 @@ export class BitMarketApp extends LitElement {
             `;
     }
 
+
     _renderDashboard() {
+        // Definimos qué mostrar para el Administrador
+        const adminView = html`
+        <section class="admin-tools">
+            <h2>Panel Admin: <span style="color: #4CAF50">${this.adminSection || 'Inicio'}</span></h2>
+            ${this.adminSection === 'categorias' ? html`<bm-admin-categorias></bm-admin-categorias>` : ''}
+            ${this.adminSection === 'productos' ? html`<bm-admin-productos></bm-admin-productos>` : ''}
+            ${this.adminSection === 'wallet' ? html`<bm-admin-wallet></bm-admin-wallet>` : ''}
+            ${!this.adminSection || this.adminSection === 'inicio' ? html`<p>Bienvenido al centro de control.</p>` : ''}
+        </section>
+    `;
+
+        // Definimos qué mostrar para el Cliente
+        const clientView = html`
+        <section class="client-shop">
+            <h2><span style="color: #80deea">${this.adminSection === 'tienda' ? 'Tienda' : (this.adminSection || 'Inicio')}</span></h2>
+            
+            ${this.adminSection === 'wallet' ? html`
+                <bm-cliente-wallet 
+                    .userId="${this.id}" 
+                    .saldo="${this.saldo}"
+                    @update-balance="${() => this._actualizarSaldo()}">
+                </bm-cliente-wallet>
+            ` : ''}
+
+            ${this.adminSection === 'tienda' ? html`
+                <bm-cliente-tienda
+                    .userId="${this.id}" >
+                </bm-cliente-tienda> 
+            ` : ''}
+
+            ${this.adminSection === 'carrito' ? html`
+                <bm-cliente-carrito
+                    .userId="${this.id}" 
+                    .saldo="${this.saldo}">
+                </bm-cliente-carrito> 
+            ` : ''}
+
+            <!-- ${(!this.adminSection || this.adminSection === 'inicio') ? html`
+                <h2>¡Hola de nuevo!</h2>
+                <p>Explora los mejores periféricos del mercado.</p>
+                <bm-destacados></bm-destacados>
+            ` : ''} -->
+        </section>
+    `;
+
         return html`
-        <div class="dashboard-container"> <div class="dashboard-content">
-                ${this.rol === 'admin'
-                ? html`
-                        <section class="admin-tools">
-                            <h2>Panel Admin: <span style="color: #4CAF50">${this.adminSection || 'Inicio'}</span></h2>
-                            ${this.adminSection === 'categorias'
-                        ? html`<bm-admin-categorias></bm-admin-categorias>`
-                        : this.adminSection === 'productos'
-                            ? html`<bm-admin-productos></bm-admin-productos>`
-                            : this.adminSection === 'wallet'
-                                ? html`<bm-admin-wallet></bm-admin-wallet>`
-                                : html`<p>Bienvenido al centro de control.</p>`
-                    }
-                        </section>`
-                : html`
-                        <section class="client-shop">
-                            <h2><span style="color: #80deea">${this.adminSection || 'Inicio'}</span></h2>
-                            
-                            ${this.adminSection === 'wallet'
-                        ? html`
-                                <bm-cliente-wallet 
-                                    .userId="${this.id}" 
-                                    .saldo="${this.saldo}"
-                                    @update-balance="${() => this._actualizarSaldo()}">
-                                </bm-cliente-wallet>
-                            `
-                        : html`
-                                    <h2>¡Hola de nuevo!</h2>
-                                    <p>Explora los mejores periféricos del mercado.</p>
-                                    <bm-destacados></bm-destacados>
-                                `
-                    }
-                            </section>`
-            }
+        <div class="dashboard-container">
+            <div class="dashboard-content">
+                ${this.rol === 'admin' ? adminView : clientView}
             </div>
         </div>
     `;
     }
+
     _renderLanding() {
         return html`
             <section class="hero">
