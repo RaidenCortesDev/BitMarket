@@ -84,9 +84,15 @@ export class BitMarketApp extends LitElement {
             this.nombre = savedUser.nombre;
             this.rol = savedUser.rol;
             this.correo = savedUser.email || savedUser.correo;
-            // Importante: Volver a convertir a número al leer de localStorage
             this.saldo = Number(savedUser.saldo || 0);
             this.view = 'dashboard';
+
+            // SOLUCIÓN: Si es cliente, forzamos que la sección inicial sea tienda
+            if (this.rol === 'cliente') {
+                this.adminSection = 'tienda';
+            } else {
+                this.adminSection = 'inicio';
+            }
         } else {
             this.rol = 'cliente';
             this.view = 'landing';
@@ -97,6 +103,12 @@ export class BitMarketApp extends LitElement {
         super.connectedCallback();
         this.addEventListener('update-balance-global', (e) => {
             this.saldo = e.detail.saldo; // Actualizamos el estado global
+        });
+
+        this.addEventListener('admin-nav', (e) => {
+            console.log("Navegación detectada hacia:", e.detail.seccion);
+            this.adminSection = e.detail.seccion;
+            this.requestUpdate();
         });
     }
 
@@ -112,28 +124,25 @@ export class BitMarketApp extends LitElement {
 
     _goToDashboard(e) {
         if (e && e.detail) {
-            // El backend envía { message: "...", user: { ... } }
-            // Por lo tanto, los datos reales están en e.detail.user
             const userData = e.detail.user || e.detail;
 
-            console.log("📥 Datos puros recibidos:", e.detail); // Para ver el JSON real
-            console.log("👤 Objeto de usuario extraído:", userData);
-
-            // 1. Asignación con nombres correctos (email vs correo)
             this.id = userData.id;
             this.nombre = userData.nombre;
-            this.correo = userData.email || userData.correo; // Acepta ambos por seguridad
+            this.correo = userData.email || userData.correo;
             this.rol = userData.rol;
 
-            // 2. Procesamiento de saldo
-            // Usamos Number() porque es más limpio para monedas
             const saldoCrudo = userData.saldo;
             this.saldo = this.rol === 'cliente' ? Number(saldoCrudo || 0) : 0;
 
+            // SOLUCIÓN: Al entrar al dashboard, definimos la sección según el rol
+            if (this.rol === 'cliente') {
+                this.adminSection = 'tienda';
+            } else {
+                this.adminSection = 'inicio';
+            }
+
             this.view = 'dashboard';
 
-            // 3. Persistencia
-            // Guardamos el objeto tal cual lo procesamos para que el constructor lo lea bien
             localStorage.setItem('bm_session', JSON.stringify({
                 id: this.id,
                 nombre: this.nombre,
@@ -142,7 +151,6 @@ export class BitMarketApp extends LitElement {
                 saldo: this.saldo
             }));
 
-            console.log(`✅ Sesión iniciada para: ${this.nombre}. Saldo: ${this.saldo}`);
             this.requestUpdate();
         }
     }
@@ -183,11 +191,11 @@ export class BitMarketApp extends LitElement {
                 @logout="${this._logout}"
                 @nav-home="${() => this.view = 'landing'}"
                 @admin-nav="${(e) => {
-                            // Forzamos que adminSection cambie para ambos (admin y cliente)
-                            this.adminSection = e.detail.seccion;
-                            console.log("Navegando a:", this.adminSection);
-                            this.requestUpdate();
-                        }}">
+                // Forzamos que adminSection cambie para ambos (admin y cliente)
+                this.adminSection = e.detail.seccion;
+                console.log("Navegando a:", this.adminSection);
+                this.requestUpdate();
+            }}">
             </bm-header>
 
             <main>

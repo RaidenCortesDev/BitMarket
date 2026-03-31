@@ -373,10 +373,10 @@ app.post('/api/wallet/recharge', async (req, res) => {
 
         // 1. Obtener info de emisor y receptor
         const usersInfo = await client.query(
-            'SELECT id, role_id, email, saldo FROM users WHERE id IN ($1, $2)', 
+            'SELECT id, role_id, email, saldo FROM users WHERE id IN ($1, $2)',
             [emitter_id, target_user_id]
         );
-        
+
         const emitter = usersInfo.rows.find(u => u.id === emitter_id);
         const target = usersInfo.rows.find(u => u.id === target_user_id);
 
@@ -425,7 +425,7 @@ app.get('/api/usuarios/:id/saldo', async (req, res) => {
     try {
         const result = await pool.query('SELECT saldo FROM users WHERE id = $1', [id]);
         if (result.rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
-        
+
         res.json({ saldo: result.rows[0].saldo });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -442,9 +442,9 @@ app.post('/api/carrito/add', async (req, res) => {
 
     // Verificación de seguridad manual antes de enviar a SQL
     if (isNaN(usuer_id) || isNaN(product_id)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             error: "Los IDs deben ser números válidos",
-            recibido: req.body 
+            recibido: req.body
         });
     }
 
@@ -458,10 +458,10 @@ app.post('/api/carrito/add', async (req, res) => {
         `;
         // Pasamos las variables ya validadas y convertidas
         const result = await pool.query(query, [usuer_id, product_id, cantidad]);
-        
-        res.json({ 
-            message: "Carrito actualizado correctamente", 
-            item: result.rows[0] 
+
+        res.json({
+            message: "Carrito actualizado correctamente",
+            item: result.rows[0]
         });
     } catch (err) {
         console.error("❌ Error en SQL:", err.message);
@@ -488,6 +488,82 @@ app.get('/api/carrito/:userId', async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+// Obtener el carrito detallado de un usuario
+app.get('/api/compra/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const query = `
+            SELECT 
+                c.cantidad,
+                p.id AS producto_id,
+                p.nombre,
+                p.precio,
+                p.imagen_url,
+                p.descripcion,
+                ARRAY_AGG(cat.nombre) FILTER (WHERE cat.id IS NOT NULL) as categorias
+            FROM carrito_compras c
+            INNER JOIN products p ON c.product_id = p.id
+            LEFT JOIN product_categories pc ON p.id = pc.product_id
+            LEFT JOIN categories cat ON pc.category_id = cat.id
+            WHERE c.usuer_id = $1
+            GROUP BY p.id, c.cantidad
+        `;
+        const result = await pool.query(query, [userId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('❌ Error al obtener carrito:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Finalizar compra: Restar saldo y limpiar carrito
+app.post('/api/carrito/comprar', async (req, res) => {
+    const { userId, total } = req.body;
+
+    // Iniciamos la transacción
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        // 1. Restar el saldo al usuario (validando que tenga suficiente)
+        const updateSaldoQuery = `
+            UPDATE users 
+            SET saldo = saldo - $1 
+            WHERE id = $2 AND saldo >= $1
+            RETURNING saldo
+        `;
+        const resSaldo = await client.query(updateSaldoQuery, [total, userId]);
+
+        if (resSaldo.rowCount === 0) {
+            throw new Error('Saldo insuficiente o usuario no encontrado');
+        }
+
+        // 2. Limpiar la tabla carrito_compras para este usuario
+        const deleteCarritoQuery = `
+            DELETE FROM carrito_compras 
+            WHERE usuer_id = $1
+        `;
+        await client.query(deleteCarritoQuery, [userId]);
+
+        // Si todo salió bien, guardamos cambios
+        await client.query('COMMIT');
+
+        res.json({
+            success: true,
+            message: 'Compra procesada y carrito limpio',
+            nuevoSaldo: resSaldo.rows[0].saldo
+        });
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('❌ Error en la transacción de compra:', err.message);
+        res.status(400).json({ error: err.message });
+    } finally {
+        client.release();
     }
 });
 
