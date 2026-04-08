@@ -14,6 +14,9 @@ export class BmHeader extends LitElement {
             width: 100%;
             background: #1a1a1a;
             border-bottom: 1px solid #333;
+            --main-green: #4CAF50;
+            position: relative;
+            z-index: 100;
         }
         header {
             max-width: 1400px;
@@ -28,22 +31,28 @@ export class BmHeader extends LitElement {
             font-size: 1.6rem; 
             color: #4CAF50; 
             cursor: pointer;
-            user-select: none;
+            z-index: 101;
         }
         
         .nav-center {
             flex-grow: 1;
+            opacity: 0;
             display: flex;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease-in-out;
             justify-content: center;
+            align-items: center;
+            gap: 20px;
         }
 
         .auth-section {
             display: flex;
             align-items: center;
             gap: 15px;
+            z-index: 101;
         }
 
-        /* --- Estilos para el Saldo --- */
         .user-wallet-info {
             color: #4CAF50;
             font-weight: bold;
@@ -53,19 +62,19 @@ export class BmHeader extends LitElement {
             font-size: 0.9rem;
             border: 1px solid #444;
             display: flex;
-            align-items: center;
-        }
-        .balance { 
-            color: white; 
-            margin-left: 5px; 
+            flex-direction: column;
+            align-items: center; /* Centra el texto "Saldo" y el monto horizontalmente */
+            justify-content: center;
+            margin-right: 10px; /* Espacio respecto al botón de hamburguesa */
+            min-width: fit-content; /* Evita que el contenedor se colapse */
+            text-align: center;
         }
 
-        /* --- Botón de Apagado --- */
         .btn-logout {
             background: #442727;
             color: #ff5252;
             border: 1px solid #ff5252;
-            padding: 6px 12px;
+            padding: 8px 15px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
@@ -74,41 +83,64 @@ export class BmHeader extends LitElement {
             gap: 8px;
             transition: 0.3s;
         }
+
         .btn-logout:hover {
             background: #ff5252;
             color: white;
         }
 
-        .login-link {
-            color: #4CAF50;
-            text-decoration: none;
-            font-weight: bold;
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
             cursor: pointer;
+        }
+
+        /* --- Móvil --- */
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+
+            .nav-center {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: #1a1a1a;
+                flex-direction: column;
+                padding: 20px 0;
+                display: none; 
+                border-bottom: 2px solid #333;
+            }
+
+            :host(.menu-open) .nav-center {
+                display: flex;
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
+
+            .btn-logout {
+                width: 80%;
+                justify-content: center;
+                margin-top: 10px;
+            }
+
+            .balance-info {
+                margin-left: auto; /* Empuja todo hacia la derecha para que equilibre con el menú */
+                padding-right: 5px;
+            }
         }
     `;
 
-    _handleLogoClick() {
-
-        if (this.view !== 'dashboard') {
-            this.dispatchEvent(new CustomEvent('nav-home', { bubbles: true, composed: true }));
-            return;
-        }
-
-        let seccionDestino = 'inicio';
-
-        if (this.rol === 'cliente') {
-            seccionDestino = 'tienda';
-        }
-
-        this.dispatchEvent(new CustomEvent('admin-nav', {
-            detail: { seccion: seccionDestino },
-            bubbles: true,
-            composed: true
-        }));
+    _toggleMenu() {
+        this.classList.toggle('menu-open');
     }
 
     _logout() {
         this.dispatchEvent(new CustomEvent('logout', { bubbles: true, composed: true }));
+        this.classList.remove('menu-open'); // Cerrar menú al salir
     }
 
     render() {
@@ -121,8 +153,12 @@ export class BmHeader extends LitElement {
             <div class="nav-center">
                 ${isLoggedIn ? html`
                     ${this.rol === 'admin'
-                    ? html`<bm-navbar-admin></bm-navbar-admin>`
-                    : html`<bm-navbar-client></bm-navbar-client>`}
+                        ? html`<bm-navbar-admin @click="${this._toggleMenu}"></bm-navbar-admin>`
+                        : html`<bm-navbar-client @click="${this._toggleMenu}"></bm-navbar-client>`}
+                    
+                    <button class="btn-logout" @click="${this._logout}">
+                        <span>⏻</span> Cerrar Sesión
+                    </button>
                 ` : ''}
             </div>
 
@@ -130,21 +166,32 @@ export class BmHeader extends LitElement {
                 ${isLoggedIn ? html`
                     ${this.rol === 'cliente' ? html`
                         <div class="user-wallet-info">
-                            Saldo: <span class="balance">$${this.saldo || 0}</span>
+                            Saldo: <span style="color:white">$${this.saldo || 0}</span>
                         </div>
                     ` : ''}
-
-                    <button class="btn-logout" @click="${this._logout}">
-                        <span style="font-size: 1.2rem;">⏻</span> Cerrar Sesión
-                    </button>
+                    <button class="menu-toggle" @click="${this._toggleMenu}">☰</button>
                 ` : html`
-                    <span class="login-link" @click="${() => this.dispatchEvent(new CustomEvent('open-login'))}">
-                        Mi Cuenta / Login
-                    </span>
+                    <button class="btn-logout" style="border-color: #4CAF50; color: #4CAF50; background: transparent;" 
+                        @click="${() => this.dispatchEvent(new CustomEvent('open-login'))}">
+                        Login
+                    </button>
                 `}
             </div>
         </header>
         `;
+    }
+
+    _handleLogoClick() {
+        if (this.view !== 'dashboard') {
+            this.dispatchEvent(new CustomEvent('nav-home', { bubbles: true, composed: true }));
+            return;
+        }
+        const seccion = this.rol === 'cliente' ? 'tienda' : 'inicio';
+        this.dispatchEvent(new CustomEvent('admin-nav', {
+            detail: { seccion },
+            bubbles: true,
+            composed: true
+        }));
     }
 }
 customElements.define('bm-header', BmHeader);

@@ -44,3 +44,5 @@ Utilizamos **Conventional Commits** para mantener un historial limpio:
 - **Autenticación:** Firebase Auth.
 - **Hosting Frontend:** [Firebase Hosting](https://firebase.google.com/).
 - **CI/CD:** GitHub Actions (Despliegue automatizado).
+
+

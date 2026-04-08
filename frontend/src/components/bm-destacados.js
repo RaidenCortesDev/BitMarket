@@ -55,7 +55,7 @@ export class BmDestacados extends LitElement {
             width: 100%;
             max-width: 1200px;
             position: relative;
-            min-height: 400px; /* Espacio para que floten las cards */
+            min-height: 500px; /* Espacio para que floten las cards */
         }
 
         .cards {
@@ -74,6 +74,13 @@ export class BmDestacados extends LitElement {
             color: var(--card-text-color);
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             border: 1px solid #444;
+        }
+
+        @media (max-width: 600px) {
+            li {
+                width: 100%; /* Una card por fila en móvil */
+                max-width: 320px;
+            }
         }
 
         .card-background { border-radius: var(--border-radius); }
@@ -95,19 +102,39 @@ export class BmDestacados extends LitElement {
 
         /* VISTA DE DETALLE (HERO) */
         .detail {
-            display: flex; flex-direction: column;
+            display: flex; 
+            flex-direction: column;
             color: var(--detail-text-color);
-            padding: 30px;
+            padding: 20px;
             border-radius: var(--border-radius);
             background: var(--detail-color);
             border: 1px solid var(--accent-color);
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
             z-index: 10;
+            overflow-y: auto; /* Por si el texto es largo en móvil */
         }
 
         .detail-header {
-            display: flex; align-items: center; gap: 20px;
-            border-bottom: 1px solid #444; padding-bottom: 20px;
+            display: flex; 
+            flex-direction: row; /* Desktop */
+            align-items: center; 
+            gap: 20px;
+            border-bottom: 1px solid #444; 
+            padding-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .detail-header {
+                flex-direction: column; /* Apilado en móvil */
+                text-align: center;
+            }
+            .detail-header-image {
+                width: 120px;
+                height: 120px;
+            }
+            .detail-header-title {
+                font-size: 1.4rem;
+            }
         }
 
         .detail-header-image { width: 150px; height: 150px; object-fit: contain; border-radius: 8px; }
@@ -116,10 +143,14 @@ export class BmDestacados extends LitElement {
         .detail-content { padding-top: 20px; font-size: 1.1em; line-height: 1.6; color: #ccc; }
         
         .btn-close {
-            margin-top: 20px; padding: 10px 20px;
+            margin-top: 20px; padding: 12px 24px;
             background: var(--accent-color); color: white;
             border: none; border-radius: 6px; cursor: pointer;
-            font-weight: bold; align-self: flex-start;
+            font-weight: bold; width: 100%; /* Más fácil de clickear en móvil */
+        }
+
+        @media (min-width: 601px) {
+            .btn-close { width: auto; }
         }
     `;
 
