@@ -36,14 +36,12 @@ export class BmHeader extends LitElement {
         
         .nav-center {
             flex-grow: 1;
-            opacity: 0;
             display: flex;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease-in-out;
             justify-content: center;
             align-items: center;
             gap: 20px;
+            /* Eliminamos opacity 0 y visibility hidden de aquí para que se vea en escritorio */
+            transition: all 0.3s ease-in-out;
         }
 
         .auth-section {
@@ -62,12 +60,9 @@ export class BmHeader extends LitElement {
             font-size: 0.9rem;
             border: 1px solid #444;
             display: flex;
-            flex-direction: column;
-            align-items: center; /* Centra el texto "Saldo" y el monto horizontalmente */
+            align-items: center;
             justify-content: center;
-            margin-right: 10px; /* Espacio respecto al botón de hamburguesa */
-            min-width: fit-content; /* Evita que el contenedor se colapse */
-            text-align: center;
+            min-width: fit-content;
         }
 
         .btn-logout {
@@ -103,6 +98,7 @@ export class BmHeader extends LitElement {
             .menu-toggle { display: block; }
 
             .nav-center {
+                /* Aquí es donde aplicamos el estado oculto para el sándwich */
                 position: absolute;
                 top: 100%;
                 left: 0;
@@ -110,8 +106,12 @@ export class BmHeader extends LitElement {
                 background: #1a1a1a;
                 flex-direction: column;
                 padding: 20px 0;
-                display: none; 
                 border-bottom: 2px solid #333;
+                
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(-10px);
+                display: none; /* Asegura que no ocupe espacio ni bloquee clics */
             }
 
             :host(.menu-open) .nav-center {
@@ -127,9 +127,9 @@ export class BmHeader extends LitElement {
                 margin-top: 10px;
             }
 
-            .balance-info {
-                margin-left: auto; /* Empuja todo hacia la derecha para que equilibre con el menú */
-                padding-right: 5px;
+            .user-wallet-info {
+                margin-left: auto;
+                margin-right: 10px;
             }
         }
     `;
@@ -140,7 +140,7 @@ export class BmHeader extends LitElement {
 
     _logout() {
         this.dispatchEvent(new CustomEvent('logout', { bubbles: true, composed: true }));
-        this.classList.remove('menu-open'); // Cerrar menú al salir
+        this.classList.remove('menu-open');
     }
 
     render() {
@@ -166,7 +166,7 @@ export class BmHeader extends LitElement {
                 ${isLoggedIn ? html`
                     ${this.rol === 'cliente' ? html`
                         <div class="user-wallet-info">
-                            Saldo: <span style="color:white">$${this.saldo || 0}</span>
+                            Saldo: <span style="color:white; margin-left: 5px;">$${this.saldo || 0}</span>
                         </div>
                     ` : ''}
                     <button class="menu-toggle" @click="${this._toggleMenu}">☰</button>
