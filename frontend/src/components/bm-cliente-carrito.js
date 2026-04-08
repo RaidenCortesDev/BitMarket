@@ -8,7 +8,7 @@ export class BmClienteCarrito extends LitElement {
         items: { type: Array },
         loading: { type: Boolean },
         // Nueva propiedad para controlar la notificación visual
-        notification: { type: Object } 
+        notification: { type: Object }
     };
 
     constructor() {
@@ -25,7 +25,7 @@ export class BmClienteCarrito extends LitElement {
     // Función auxiliar para mostrar la notificación estética
     _showNotification(message, type = 'success') {
         this.notification = { show: true, message, type };
-        
+
         // Se oculta automáticamente tras 4 segundos
         setTimeout(() => {
             this.notification = { ...this.notification, show: false };
@@ -121,7 +121,7 @@ export class BmClienteCarrito extends LitElement {
                 }));
 
                 this.items = [];
-                
+
                 // Esperamos un poco para que vean la notificación antes de cambiar de sección
                 setTimeout(() => {
                     this.dispatchEvent(new CustomEvent('admin-nav', {
@@ -140,13 +140,22 @@ export class BmClienteCarrito extends LitElement {
     }
 
     static styles = css`
-        :host { display: block; padding: 20px; color: white; font-family: 'Segoe UI', sans-serif; position: relative; }
+        :host { 
+            display: block; 
+            padding: 20px; 
+            color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+            position: relative; 
+        }
         
         /* --- ESTILOS DE LA NOTIFICACIÓN (TOAST) --- */
         .toast {
             position: fixed;
             top: 20px;
             right: 20px;
+            left: 20px; 
+            max-width: 400px; 
+            margin-left: auto; 
             padding: 15px 25px;
             border-radius: 8px;
             display: flex;
@@ -154,18 +163,39 @@ export class BmClienteCarrito extends LitElement {
             gap: 10px;
             font-weight: bold;
             z-index: 9999;
-            transform: translateX(120%);
-            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform: translateY(-150%); 
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        .toast.show { transform: translateX(0); }
-        .toast.success { background: #4CAF50; border-left: 5px solid #1b5e20; }
-        .toast.error { background: #f44336; border-left: 5px solid #b71c1c; }
-        .toast.info { background: #2196F3; border-left: 5px solid #0d47a1; }
 
-        .carrito-lista { display: flex; flex-direction: column; gap: 12px; }
+        .toast.show { 
+            transform: translateY(0); 
+        }
+
+        .toast.success { 
+            background: #4CAF50;
+            border-left: 5px solid #1b5e20; 
+        }
+
+        .toast.error { 
+            background: #f44336; 
+            border-left: 5px solid #b71c1c; 
+        }
+
+        .toast.info {
+            background: #2196F3; 
+            border-left: 5px solid #0d47a1; 
+        }
+
+        .carrito-lista { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+        }
+
         .item-carrito { 
             display: flex; 
+            flex-wrap: wrap;
             align-items: center; 
             background: #1e1e1e; 
             padding: 12px; 
@@ -173,14 +203,60 @@ export class BmClienteCarrito extends LitElement {
             border: 1px solid #333;
             gap: 15px;
         }
-        .prod-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; background: #000; }
-        .info-prod { flex-grow: 1; }
-        .info-prod h4 { margin: 0; color: #80deea; font-size: 1rem; }
-        .info-prod p { margin: 2px 0; color: #4CAF50; font-weight: bold; }
 
-        .stepper { display: flex; align-items: center; background: #252525; border-radius: 20px; border: 1px solid #444; }
-        .btn-step { background: none; border: none; color: #4CAF50; padding: 5px 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; }
-        .qty { width: 30px; text-align: center; font-size: 0.9rem; font-weight: bold; }
+        .prod-img {
+            width: 65px; 
+            height: 65px; 
+            object-fit: cover; 
+            border-radius: 8px; 
+            background: #000; 
+        }
+
+        .info-prod { 
+            flex-grow: 1;
+            min-width: 120px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-prod h4 { 
+            margin: 0; 
+            color: #80deea; 
+            font-size: 0.95rem; 
+            line-height: 1.2; 
+        }
+
+        .info-prod p {
+            margin: 2px 0; 
+            color: #4CAF50; 
+            font-weight: bold; 
+        }
+
+        .stepper { 
+            display: flex; 
+            align-items: center; 
+            background: #252525; 
+            border-radius: 20px; 
+            border: 1px solid #444;
+            height: fit-content; 
+        }
+
+        .btn-step { 
+            background: none; 
+            border: none; 
+            color: #4CAF50; 
+            padding: 5px 12px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 1.1rem; 
+        }
+
+        .qty { 
+            width: 25px; 
+            text-align: center; 
+            font-size: 0.9rem; 
+            font-weight: bold; 
+        }
 
         .totales { 
             margin-top: 25px; 
@@ -190,21 +266,82 @@ export class BmClienteCarrito extends LitElement {
             text-align: right; 
             border: 1px solid #4CAF50;
         }
-        .total-number { font-size: 2.2rem; color: #4CAF50; font-weight: bold; margin: 5px 0; }
+
+        .total-number { 
+            font-size: clamp(1.8rem, 5vw, 2.2rem);
+            color: #4CAF50; 
+            font-weight: bold; 
+            margin: 5px 0; 
+        }
+        
         .btn-comprar {
             background: #4CAF50;
             color: white;
             border: none;
             padding: 15px 40px;
             border-radius: 30px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
-            width: 100%;
+            width: auto;
+            max-width: 300px;
             margin-top: 10px;
+            display: block;
             transition: 0.2s;
         }
-        .btn-comprar:hover { background: #45a049; transform: scale(1.01); }
+
+        .btn-comprar:hover { 
+            background: #45a049; 
+            transform: scale(1.01); 
+        }
+
+        /* --- MODIFICACIÓN EXCLUSIVA PARA CELULAR --- */
+        @media (max-width: 768px) {
+            .item-carrito {
+                flex-wrap: wrap; 
+                justify-content: center; /* Centra los elementos si sobran espacios */
+            }
+            .prod-img { 
+                order: 1; 
+                width: 60px; 
+                height: 60px; 
+            }
+            .info-prod { 
+                order: 2; 
+                flex: 1 1 calc(100% - 80px); 
+                margin-left: 0; 
+            }
+            
+            /* Ajuste del Stepper (Botones) */
+            .stepper { 
+                order: 4; /* Lo regresé a 3 para que vaya a la izquierda del subtotal */
+                flex: 1;  /* Toma la mitad del ancho */
+                justify-content: center; /* Centra los botones dentro de su espacio */
+                transform: scale(0.9);
+                margin-top: 15px;
+            }
+
+            /* Ajuste del Subtotal (Div sin clase) */
+            .item-carrito > div:last-child {
+                order: 3;
+                flex: 1; /* Toma la otra mitad del ancho */
+                display: flex;
+                flex-direction: column;
+                align-items: center; /* Centra el texto "Subtotal" y el monto */
+                justify-content: center;
+                margin-top: 15px;
+                margin-left: 0 !important; /* Quitamos el auto para que no se pegue a la derecha */
+                text-align: center;
+            }
+
+            .totales { 
+                text-align: center; 
+            }
+            .btn-comprar {
+                width: 100%;
+                max-width: none;
+            }
+        }
     `;
 
     render() {
@@ -219,17 +356,16 @@ export class BmClienteCarrito extends LitElement {
                 <div style="text-align:center; padding: 40px;">
                     <h3 style="color: #666;">Tu carrito está vacío</h3>
                     <button class="btn-comprar" style="width:auto;" @click="${() => {
-                        this.dispatchEvent(new CustomEvent('admin-nav', { 
-                            detail: { seccion: 'tienda' }, 
-                            bubbles: true, 
-                            composed: true 
-                        }));
-                    }}">
+                    this.dispatchEvent(new CustomEvent('admin-nav', {
+                        detail: { seccion: 'tienda' },
+                        bubbles: true,
+                        composed: true
+                    }));
+                }}">
                         Ir a comprar algo
                     </button>
                 </div>
             ` : html`
-                <h2>🛒 Mi Carrito Detallado</h2>
                 <div class="carrito-lista">
                     ${this.items.map(item => html`
                         <div class="item-carrito">

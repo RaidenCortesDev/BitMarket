@@ -168,28 +168,254 @@ export class BmCatalogo extends LitElement {
     }
 
     static styles = css`
-        /* ... se mantienen tus estilos igual ... */
-        :host { display: block; padding: 1rem; color: white; font-family: 'Segoe UI', sans-serif; }
-        .toast { position: fixed; top: 80px; right: 20px; background: #4CAF50; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 3000; }
-        .catalogo-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding: 20px; }
-        .product-card { background: #1a1a1a; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: 0.3s; position: relative; display: flex; flex-direction: column; }
-        .product-card:hover { border-color: #4CAF50; transform: translateY(-5px); }
-        .img-box { width: 100%; height: 200px; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .img-box img { max-width: 80%; max-height: 80%; object-fit: contain; }
-        .info { padding: 1.2rem; flex-grow: 1; display: flex; flex-direction: column; }
-        .price { color: #4CAF50; font-size: 1.4rem; font-weight: bold; margin: 5px 0; }
-        .subtotal-label { color: #80deea; font-size: 0.8rem; margin-bottom: 8px; font-weight: bold; }
-        .amazon-stepper { display: flex; align-items: center; justify-content: center; background: #252525; border-radius: 25px; border: 1px solid #444; margin-bottom: 10px; width: fit-content; align-self: center; }
-        .stepper-btn { background: none; border: none; color: #4CAF50; padding: 8px 15px; cursor: pointer; font-size: 1.2rem; font-weight: bold; }
-        .qty-val { width: 40px; text-align: center; font-weight: bold; font-size: 1.1rem; }
-        .btn-add { background: #4CAF50; color: white; border: none; padding: 10px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-add:hover { background: #45a049; }
-        .btn-trash { background: none; border: none; color: #ff5252; cursor: pointer; margin-left: 10px; font-size: 1.2rem; }
-        .in-cart-badge { position: absolute; top: 10px; left: 10px; background: #4CAF50; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-content { background: #1a1a1a; width: 90%; max-width: 600px; border-radius: 20px; border: 1px solid #444; padding: 2rem; position: relative; color: white; }
-        .close-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
-        .badge { background: #333; color: #80deea; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; }
+        :host { 
+            display: block; 
+            padding: 1rem; 
+            color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+        }
+
+        .toast { 
+            position: fixed; 
+            top: 80px; 
+            right: 20px; 
+            background: #4CAF50; 
+            color: white; 
+            padding: 1rem 2rem; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); 
+            z-index: 3000; 
+        }
+
+        .catalogo-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 25px; 
+            padding: 20px; 
+        }
+
+        .product-card { 
+            background: #1a1a1a; 
+            border: 1px solid #333; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            transition: 0.3s; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        .product-card:hover { b
+            order-color: #4CAF50; 
+            transform: translateY(-5px); 
+        }
+
+        .img-box { 
+            width: 100%; 
+            height: 200px; 
+            background: #fff; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+        }
+
+        .img-box img { 
+            max-width: 80%; 
+            max-height: 80%; 
+            object-fit: contain; 
+        }
+
+        .info { 
+            padding: 1.2rem; 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        .price { 
+            color: #4CAF50; 
+            font-size: 1.4rem; 
+            font-weight: bold; 
+            margin: 5px 0; 
+        }
+
+        .subtotal-label { 
+            color: #80deea; 
+            font-size: 0.8rem; 
+            margin-bottom: 8px; 
+            font-weight: bold; 
+        }
+
+        .stepper { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #252525; 
+            border-radius: 25px; 
+            border: 1px solid #444; 
+            margin-bottom: 10px; 
+            width: fit-content; 
+            align-self: center; 
+        }
+
+        .stepper-btn { 
+            background: none; 
+            border: none; 
+            color: #4CAF50; 
+            padding: 8px 15px; 
+            cursor: pointer; 
+            font-size: 1.2rem; 
+            font-weight: bold; 
+        }
+
+        .qty-val { 
+            width: 40px; 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 1.1rem; 
+        }
+
+        .btn-add { 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 10px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.2s; 
+        }
+
+        .btn-add:hover { 
+            background: #45a049; 
+        }
+
+        .btn-trash { 
+            background: none; 
+            border: none; 
+            color: #ff5252; 
+            cursor: pointer; 
+            margin-left: 10px; 
+            font-size: 1.2rem; 
+        }
+
+        .in-cart-badge { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            background: #4CAF50; 
+            color: white; 
+            padding: 4px 10px; 
+            border-radius: 12px; 
+            font-size: 0.75rem; 
+            font-weight: bold; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5); 
+        }
+
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.85); 
+            backdrop-filter: 
+            blur(8px); display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 2000; 
+        }
+
+        .modal-content { 
+            background: #1a1a1a; 
+            width: 90%; 
+            max-width: 600px; 
+            border-radius: 24px; 
+            border: 1px solid #444; 
+            padding: 2rem; 
+            position: relative; 
+            color: white; 
+            max-height: 90vh; 
+            overflow-y: auto; 
+        }
+
+        .close-btn { 
+            position: absolute; 
+            top: 15px; 
+            right: 20px; 
+            background: #333; 
+            border: none; 
+            color: white; 
+            width: 35px; 
+            height: 35px; 
+            border-radius: 50%; 
+            font-size: 1.2rem; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 10; 
+        }
+
+        .badge { 
+            background: #333; 
+            color: #80deea; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            font-size: 0.7rem; 
+            margin-right: 5px; 
+        }
+
+        @media (max-width: 768px) {
+            .catalogo-container {
+                grid-template-columns: 1fr;
+                padding: 10px;
+                gap: 15px;
+            }
+
+            .product-card {
+                flex-direction: row;
+                height: auto; /* Cambiado de 180px a auto para que no se coma el contenido */
+                min-height: 170px; 
+            }
+
+            .img-box {
+                width: 35%; /* Reducimos un poco la imagen para dar espacio al texto */
+                height: auto;
+                min-height: 170px;
+            }
+
+            .info {
+                width: 65%; /* Más espacio para el precio y botones */
+                padding: 0.6rem; /* Menos espacio interno para ganar lugar */
+                justify-content: space-between; /* Distribuye mejor los elementos de arriba a abajo */
+            }
+
+            .info h3 { 
+                font-size: 0.95rem; 
+                margin: 0 0 4px 0 !important; 
+                line-height: 1.2;
+            }
+
+            .price { 
+                font-size: 1.1rem; 
+                margin: 2px 0;
+            }
+            
+            .stepper {
+                transform: scale(0.85); /* Un poco más pequeño para Nexus */
+                margin: 5px 0;
+                width: 100%; /* Que ocupe el ancho disponible del contenedor info */
+                max-width: 120px; /* Pero con un tope para que no se vea gigante */
+            }
+
+            .btn-add {
+                padding: 6px;
+                font-size: 0.8rem;
+                width: 100%; /* Botón a lo ancho para que sea más fácil de tocar */
+            }
+        }
     `;
 
     render() {
@@ -221,7 +447,7 @@ export class BmCatalogo extends LitElement {
 
                             <div style="margin-top: auto; display: flex; flex-direction: column;">
                                 <div style="display: flex; align-items: center; justify-content: center;">
-                                    <div class="amazon-stepper">
+                                    <div class="stepper">
                                         <button class="stepper-btn" @click="${() => this._handleTempQty(p.id, -1)}">−</button>
                                         <span class="qty-val">${tempQty}</span>
                                         <button class="stepper-btn" @click="${() => this._handleTempQty(p.id, 1)}">+</button>
@@ -260,7 +486,7 @@ export class BmCatalogo extends LitElement {
                             
                             <div style="background: #252525; padding: 15px; border-radius: 12px; margin-top: 15px;">
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div class="amazon-stepper" style="margin-bottom: 0;">
+                                    <div class="stepper" style="margin-bottom: 0;">
                                         <button class="stepper-btn" @click="${() => this._handleTempQty(p.id, -1)}">−</button>
                                         <span class="qty-val">${tempQty}</span>
                                         <button class="stepper-btn" @click="${() => this._handleTempQty(p.id, 1)}">+</button>

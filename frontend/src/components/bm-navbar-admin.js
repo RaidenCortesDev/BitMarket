@@ -70,7 +70,7 @@ export class BmNavbarAdmin extends LitElement {
                 <li @click="${() => this._changeSection('inicio')}">Dashboard</li>
                 <li @click="${() => this._changeSection('productos')}">Productos</li>
                 <li @click="${() => this._changeSection('categorias')}">Categorías</li>
-                <li @click="${() => this._changeSection('wallet')}">Wallet</li>
+                <li @click="${() => this._changeSection('wallet')}">👝 Wallet</li>
             </ul>
         </nav>
         `;

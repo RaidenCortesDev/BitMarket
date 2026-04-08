@@ -252,7 +252,7 @@ export class BitMarketApp extends LitElement {
         <section class="client-shop">
             <h2><span style="color: #80deea">${this.adminSection === 'tienda' ? 'Tienda' : (this.adminSection || 'Inicio')}</span></h2>
             
-            ${this.adminSection === 'wallet' ? html`
+            ${this.adminSection === '👝 Mi Wallet' ? html`
                 <bm-cliente-wallet 
                     .userId="${this.id}" 
                     .saldo="${this.saldo}"
@@ -266,7 +266,7 @@ export class BitMarketApp extends LitElement {
                 </bm-cliente-tienda> 
             ` : ''}
 
-            ${this.adminSection === 'carrito' ? html`
+            ${this.adminSection === '🛒 Mi Carrito Detallado' ? html`
                 <bm-cliente-carrito
                     .userId="${this.id}" 
                     .saldo="${this.saldo}">
