@@ -1,8 +1,8 @@
 import { LitElement, html, css } from 'lit';
-import { UserSchema } from '../lib/validators.js';
-import { auth } from '../firebase-config.js';
+import { UserSchema } from '../../lib/validators.js';
+import { auth } from '../../firebase-config.js';
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { API_URL } from '../../config.js';
+import { API_URL } from '../../../config.js';
 
 export class BmRegistro extends LitElement {
     static properties = {

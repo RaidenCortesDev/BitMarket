@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { animate, fadeInSlow } from '@lit-labs/motion';
-import { API_URL } from '../../config.js';
+import { API_URL } from '../../../config.js';
 
 export class BmCatalogo extends LitElement {
     static properties = {

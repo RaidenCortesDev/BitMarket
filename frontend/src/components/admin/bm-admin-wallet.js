@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { API_URL } from '../../config.js';
+import { API_URL } from '../../../config.js';
 
 export class BmAdminWallet extends LitElement {
     static properties = {

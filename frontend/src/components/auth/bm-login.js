@@ -1,8 +1,8 @@
 import { LitElement, html, css } from 'lit';
-import { LoginSchema } from '../lib/validators.js'; // Importamos el que acabamos de crear
-import { auth } from '../firebase-config.js';
+import { LoginSchema } from '../../lib/validators.js'; // Importamos el que acabamos de crear
+import { auth } from '../../firebase-config.js';
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { API_URL } from '../../config.js';
+import { API_URL } from '../../../config.js';
 
 export class BmLogin extends LitElement {
     static properties = {

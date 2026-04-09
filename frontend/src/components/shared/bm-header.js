@@ -21,26 +21,46 @@ export class BmHeader extends LitElement {
         header {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0.8rem 2rem;
+            padding: 0.6rem 2rem; /* Reduje un poco el padding vertical */
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .logo { 
-            font-weight: bold; 
-            font-size: 1.6rem; 
-            color: #4CAF50; 
+
+        /* --- Estilos del Logo --- */
+        .logo-container {
+            display: flex;
+            align-items: center;
             cursor: pointer;
             z-index: 101;
+            min-width: 150px;
         }
-        
+
+        .logo-img {
+            width: auto;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+
+        .logo-img:hover {
+            transform: scale(1.05);
+        }
+
+        /* Por defecto mostramos el logo completo y ocultamos el icono */
+        .logo-full { 
+            display: block; 
+            height: 35px
+        }
+        .logo-icon { 
+            display: none; 
+        }
+
         .nav-center {
             flex-grow: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 20px;
-            /* Eliminamos opacity 0 y visibility hidden de aquí para que se vea en escritorio */
             transition: all 0.3s ease-in-out;
         }
 
@@ -95,10 +115,20 @@ export class BmHeader extends LitElement {
 
         /* --- Móvil --- */
         @media (max-width: 768px) {
+            /* Cambiamos el logo completo por el icono en móvil */
+            .logo-container {
+                min-width: auto;
+            }
+            
+            .logo-full { display: none; }
+            .logo-icon { 
+                display: block; 
+                height: 35px; /* Icono un poco más grande para que sea fácil de ver */
+            }
+
             .menu-toggle { display: block; }
 
             .nav-center {
-                /* Aquí es donde aplicamos el estado oculto para el sándwich */
                 position: absolute;
                 top: 100%;
                 left: 0;
@@ -107,11 +137,10 @@ export class BmHeader extends LitElement {
                 flex-direction: column;
                 padding: 20px 0;
                 border-bottom: 2px solid #333;
-                
                 opacity: 0;
                 visibility: hidden;
                 transform: translateY(-10px);
-                display: none; /* Asegura que no ocupe espacio ni bloquee clics */
+                display: none;
             }
 
             :host(.menu-open) .nav-center {
@@ -148,7 +177,10 @@ export class BmHeader extends LitElement {
 
         return html`
         <header>
-            <div class="logo" @click="${this._handleLogoClick}">BitMarket</div>
+            <div class="logo-container" @click="${this._handleLogoClick}">
+                <img src="/src/assets/logo/logo.png" alt="BitMarket" class="logo-img logo-full">
+                <img src="/src/assets/logo/icono.png" alt="BM" class="logo-img logo-icon">
+            </div>
 
             <div class="nav-center">
                 ${isLoggedIn ? html`

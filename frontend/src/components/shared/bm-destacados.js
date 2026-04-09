@@ -1,31 +1,31 @@
 import { LitElement, html, css } from 'lit';
 import { repeat } from 'lit/directives/repeat.js';
 import { animate, AnimateController, fadeInSlow, fadeOut } from '@lit-labs/motion';
-import { API_URL } from '../../config.js';
+import { API_URL } from '../../../config.js';
 
 // --- Helpers de animación (En lugar de support.js) ---
 const springy = [
-  0, 0.0701, 0.2329, 0.4308, 0.6245, 0.7906, 0.9184, 1.0065, 1.059, 1.0833,
-  1.0872, 1.0783, 1.0628, 1.0453, 1.0288, 1.015, 1.0048, 0.9979, 0.994, 0.9925,
-  0.9925, 0.9935, 0.9949, 0.9964, 0.9978, 0.999, 0.9998,
+    0, 0.0701, 0.2329, 0.4308, 0.6245, 0.7906, 0.9184, 1.0065, 1.059, 1.0833,
+    1.0872, 1.0783, 1.0628, 1.0453, 1.0288, 1.015, 1.0048, 0.9979, 0.994, 0.9925,
+    0.9925, 0.9935, 0.9949, 0.9964, 0.9978, 0.999, 0.9998,
 ];
 
 const onFrames = (animate) => {
-  const { animatingProperties: props, frames } = animate;
-  if (frames === undefined || props === undefined) return frames;
-  return [
-    frames[0],
-    ...springy.map((v) => {
-      const frame = {};
-      const x = props.left ? `translateX(${props.left * (1 - v)}px)` : '';
-      const y = props.top ? `translateY(${props.top * (1 - v)}px)` : '';
-      const sx = props.width ? `scaleX(${props.width + (1 - props.width) * v})` : '';
-      const sy = props.height ? `scaleY(${props.height + (1 - props.height) * v})` : '';
-      frame.transform = `${x} ${y} ${sx} ${sy}`;
-      return frame;
-    }),
-    frames[1],
-  ];
+    const { animatingProperties: props, frames } = animate;
+    if (frames === undefined || props === undefined) return frames;
+    return [
+        frames[0],
+        ...springy.map((v) => {
+            const frame = {};
+            const x = props.left ? `translateX(${props.left * (1 - v)}px)` : '';
+            const y = props.top ? `translateY(${props.top * (1 - v)}px)` : '';
+            const sx = props.width ? `scaleX(${props.width + (1 - props.width) * v})` : '';
+            const sy = props.height ? `scaleY(${props.height + (1 - props.height) * v})` : '';
+            frame.transform = `${x} ${y} ${sx} ${sy}`;
+            return frame;
+        }),
+        frames[1],
+    ];
 };
 
 export class BmDestacados extends LitElement {
@@ -196,9 +196,9 @@ export class BmDestacados extends LitElement {
         <div class="container">
             <ul class="cards ${this.detail ? 'fit' : ''}">
                 ${repeat(
-                    this.detail ? [] : this.productos,
-                    (p) => p.id,
-                    (p) => html`
+            this.detail ? [] : this.productos,
+            (p) => p.id,
+            (p) => html`
                     <li @click=${(e) => this.clickHandler(e, p)}
                         ${animate({ out: fadeOut, id: `${p.id}:card`, inId: `${p.id}:detail` })}>
                         <div class="card-background fit" ${animate({ in: fadeInSlow, skipInitial: true })}></div>
@@ -214,7 +214,7 @@ export class BmDestacados extends LitElement {
                             </div>
                         </div>
                     </li>`
-                )}
+        )}
             </ul>
 
             ${this.detail ? html`
