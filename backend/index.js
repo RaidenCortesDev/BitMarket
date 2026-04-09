@@ -522,6 +522,79 @@ app.get('/api/compra/:userId', async (req, res) => {
 // Finalizar compra: Restar saldo y limpiar carrito
 app.post('/api/carrito/comprar', async (req, res) => {
     const { userId, total } = req.body;
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        // 1. Obtener los productos del carrito
+        const getCarritoQuery = `SELECT product_id, cantidad FROM carrito_compras WHERE usuer_id = $1`;
+        const resCarrito = await client.query(getCarritoQuery, [userId]);
+
+        if (resCarrito.rows.length === 0) {
+            throw new Error('El carrito está vacío');
+        }
+
+        // --- VALIDACIÓN DE TODO EL CARRITO ---
+        const erroresStock = [];
+
+        for (const item of resCarrito.rows) {
+            const resInfo = await client.query('SELECT nombre, stock FROM products WHERE id = $1', [item.product_id]);
+            const info = resInfo.rows[0];
+            const stockActual = info?.stock || 0;
+
+            if (item.cantidad > stockActual) {
+                const sobrante = item.cantidad - stockActual;
+                erroresStock.push(`Stock insuficiente para ${info.nombre}. En tu compra te estás excediendo del stock por ${sobrante}`);
+            }
+        }
+
+        // Si hay errores, mandamos el string separado por '|'
+        if (erroresStock.length > 0) {
+            await client.query('ROLLBACK'); // Cancelamos cualquier inicio de transaccion
+            return res.status(400).json({ error: erroresStock.join('|') });
+        }
+
+        // 2. Si todo está OK, restamos el stock de cada producto
+        for (const item of resCarrito.rows) {
+            await client.query(
+                'UPDATE products SET stock = stock - $1 WHERE id = $2',
+                [item.cantidad, item.product_id]
+            );
+        }
+
+        // 3. Restar el saldo al usuario
+        const resSaldo = await client.query(
+            'UPDATE users SET saldo = saldo - $1 WHERE id = $2 AND saldo >= $1 RETURNING saldo',
+            [total, userId]
+        );
+
+        if (resSaldo.rowCount === 0) {
+            throw new Error('Saldo insuficiente o usuario no encontrado');
+        }
+
+        // 4. Limpiar el carrito
+        await client.query('DELETE FROM carrito_compras WHERE usuer_id = $1', [userId]);
+
+        await client.query('COMMIT');
+
+        res.json({
+            success: true,
+            nuevoSaldo: resSaldo.rows[0].saldo
+        });
+
+    } catch (err) {
+        // Este es el catch que faltaba o estaba mal puesto
+        await client.query('ROLLBACK');
+        console.error('❌ ERROR CRÍTICO EN COMPRA:', err.message);
+        res.status(400).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+/*app.post('/api/carrito/comprar', async (req, res) => {
+    const { userId, total } = req.body;
 
     // Iniciamos la transacción
     const client = await pool.connect();
@@ -565,7 +638,7 @@ app.post('/api/carrito/comprar', async (req, res) => {
     } finally {
         client.release();
     }
-});
+});*/
 
 // --- Encendido del log del backend ---
 const PORT = process.env.PORT || 3000;

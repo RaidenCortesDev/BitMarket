@@ -8,14 +8,14 @@ export class BmClienteCarrito extends LitElement {
         items: { type: Array },
         loading: { type: Boolean },
         // Nueva propiedad para controlar la notificación visual
-        notification: { type: Object }
+        notifications: { type: Array }
     };
 
     constructor() {
         super();
         this.items = [];
         this.loading = true;
-        this.notification = { show: false, message: '', type: '' };
+        this.notifications = [];
     }
 
     async firstUpdated() {
@@ -24,11 +24,14 @@ export class BmClienteCarrito extends LitElement {
 
     // Función auxiliar para mostrar la notificación estética
     _showNotification(message, type = 'success') {
-        this.notification = { show: true, message, type };
+        const id = Date.now(); // ID único para cada globo
+        const nuevaNotificacion = { id, message, type, show: true };
 
-        // Se oculta automáticamente tras 4 segundos
+        this.notifications = [...this.notifications, nuevaNotificacion];
+
+        // Quitarla individualmente después de 4 segundos
         setTimeout(() => {
-            this.notification = { ...this.notification, show: false };
+            this.notifications = this.notifications.filter(n => n.id !== id);
         }, 4000);
     }
 
@@ -132,7 +135,20 @@ export class BmClienteCarrito extends LitElement {
                 }, 1500);
 
             } else {
-                this._showNotification("🚫 " + (result.error || "Error al procesar"), "error");
+                // Si el error contiene el separador '|', significa que hay varios productos mal
+                if (result.error && result.error.includes('|')) {
+                    const listaErrores = result.error.split('|');
+
+                    listaErrores.forEach((msg, index) => {
+                        // Ponemos un intervalo de 1.2 segundos entre cada notificación
+                        setTimeout(() => {
+                            this._showNotification("🚫 " + msg, "error");
+                        }, index * 1200);
+                    });
+                } else {
+                    // Si es un error normal (solo uno), se muestra directo
+                    this._showNotification("🚫 " + (result.error || "Error al procesar"), "error");
+                }
             }
         } catch (err) {
             this._showNotification("🔥 Error de conexión", "error");
@@ -295,6 +311,35 @@ export class BmClienteCarrito extends LitElement {
             transform: scale(1.01); 
         }
 
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column; /* Apila uno abajo de otro */
+            gap: 10px; /* Espacio entre globos */
+            pointer-events: none; /* No estorba clics abajo */
+        }
+
+        .toast {
+            position: relative; /* Cambia de fixed a relative */
+            max-width: 400px;
+            margin-left: auto;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            transform: translateX(120%); /* Aparecen desde la derecha */
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            pointer-events: auto;
+        }
+
+        .toast.show { 
+            transform: translateX(0); 
+        }
+
         /* --- MODIFICACIÓN EXCLUSIVA PARA CELULAR --- */
         @media (max-width: 768px) {
             .item-carrito {
@@ -348,9 +393,13 @@ export class BmClienteCarrito extends LitElement {
         if (this.loading) return html`<p>Sincronizando BitMarket...</p>`;
 
         return html`
-            <div class="toast ${this.notification.type} ${this.notification.show ? 'show' : ''}">
-                ${this.notification.message}
-            </div>
+        <div class="toast-container">
+            ${this.notifications.map(n => html`
+                <div class="toast ${n.type} ${n.show ? 'show' : ''}">
+                    ${n.message}
+                </div>
+            `)}
+        </div>
 
             ${this.items.length === 0 ? html`
                 <div style="text-align:center; padding: 40px;">
