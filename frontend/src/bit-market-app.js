@@ -301,7 +301,7 @@ export class BitMarketApp extends LitElement {
         return html`
             <section class="hero">
                 <div class="promo-text">
-                    <img src="src/assets/media/BitMarket.png" alt="BitMarket Logo" class="hero-logo">
+                    <img src="https://res.cloudinary.com/ddvit9qlh/image/upload/v1775712413/BitMarket_z4oon5.png" alt="BitMarket Logo" class="hero-logo">
                     
                     <h1>¿Te quieres unos periféricos nuevos? ⌨️</h1>
                     <p>Eleva tu setup al siguiente nivel con BitMarket. Calidad premium para gamers de verdad.</p>

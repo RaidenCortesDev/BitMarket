@@ -178,8 +178,8 @@ export class BmHeader extends LitElement {
         return html`
         <header>
             <div class="logo-container" @click="${this._handleLogoClick}">
-                <img src="/src/assets/logo/logo.png" alt="BitMarket" class="logo-img logo-full">
-                <img src="/src/assets/logo/icono.png" alt="BM" class="logo-img logo-icon">
+                <img src="https://res.cloudinary.com/ddvit9qlh/image/upload/v1775712413/logo_vmbhcf.png" alt="BitMarket" class="logo-img logo-full">
+                <img src="https://res.cloudinary.com/ddvit9qlh/image/upload/v1775712413/icono_z4nmcq.png" alt="BM" class="logo-img logo-icon">
             </div>
 
             <div class="nav-center">
