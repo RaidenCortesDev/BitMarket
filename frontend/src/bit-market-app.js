@@ -1,16 +1,23 @@
 import { LitElement, html, css } from 'lit';
-import './components/bm-header.js';
-import './components/bm-navbar-client.js';
-import './components/bm-navbar-admin.js';
-import './components/bm-registro.js';
-import './components/bm-login.js';
-import './components/bm-admin-categorias.js';
-import './components/bm-admin-productos.js';
-import './components/bm-admin-wallet.js';
-import './components/bm-destacados.js';
-import './components/bm-cliente-wallet.js';
-import './components/bm-cliente-tienda.js';
-import './components/bm-cliente-carrito.js';
+// --- Componentes Globales (Shared) ---
+import './components/shared/bm-header.js';
+import './components/shared/bm-destacados.js';
+
+// --- Autenticación ---
+import './components/auth/bm-registro.js';
+import './components/auth/bm-login.js';
+
+// --- Módulo de Administración ---
+import './components/admin/bm-navbar-admin.js';
+import './components/admin/bm-admin-categorias.js';
+import './components/admin/bm-admin-productos.js';
+import './components/admin/bm-admin-wallet.js';
+
+// --- Módulo de Cliente ---
+import './components/client/bm-navbar-client.js';
+import './components/client/bm-cliente-tienda.js';
+import './components/client/bm-cliente-carrito.js';
+import './components/client/bm-cliente-wallet.js';
 
 
 export class BitMarketApp extends LitElement {
@@ -294,6 +301,8 @@ export class BitMarketApp extends LitElement {
         return html`
             <section class="hero">
                 <div class="promo-text">
+                    <img src="src/assets/media/BitMarket.png" alt="BitMarket Logo" class="hero-logo">
+                    
                     <h1>¿Te quieres unos periféricos nuevos? ⌨️</h1>
                     <p>Eleva tu setup al siguiente nivel con BitMarket. Calidad premium para gamers de verdad.</p>
                     <button class="btn-main" @click="${() => this._goToAuth('login')}">
@@ -321,6 +330,23 @@ export class BitMarketApp extends LitElement {
                     padding: 4rem 2rem;
                     text-align: center;
                 }
+                .hero-logo {
+                    max-width: 400px; /* Tamaño grande para escritorio */
+                    width: 100%;      /* Responsivo */
+                    height: auto;
+                    margin-bottom: 1.5rem;
+                    filter: drop-shadow(0 0 10px rgba(76, 175, 80, 0.2)); /* Un brillo verde sutil */
+                    transition: transform 0.3s ease;
+                }
+
+                .hero-logo:hover {
+                    transform: scale(1.02);
+                }
+
+                .promo-text h1 {
+                    font-size: 2.5rem;
+                    margin-bottom: 1rem;
+                }
                 .btn-main {
                     background: var(--main-green);
                     color: white;
@@ -330,14 +356,29 @@ export class BitMarketApp extends LitElement {
                     cursor: pointer;
                     border-radius: 8px;
                     font-weight: bold;
+                    margin-top: 1rem;
                 }
+
                 .btn-main:hover { background: #45a049; }
+
                 .products-section {
                     padding: 2rem;
                     background: #f4f4f4;
                     color: black;
                     min-height: 200px;
                     text-align: center;
+                }
+
+                @media (max-width: 768px) {
+                    .hero {
+                        padding: 2rem 1rem;
+                    }
+                    .hero-logo {
+                        max-width: 220px; /* Tamaño moderado para móvil */
+                    }
+                    .promo-text h1 {
+                        font-size: 1.8rem;
+                    }
                 }
             </style>
     `;
