@@ -11,26 +11,195 @@ export class BmAdminProductos extends LitElement {
     };
     
     static styles = css`
-        :host { display: block; color: white; }
-        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; background: #2a2a2a; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #444; }
-        th { background: #333; color: #4CAF50; }
-        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-add { background: #4CAF50; color: white; }
-        .btn-cancel { background: #666; color: white; }
-        .empty-state { text-align: center; padding: 40px; background: #2a2a2a; border-radius: 8px; border: 1px dashed #444; }
-        .chips-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-        .chip { padding: 6px 14px; background: #444; border-radius: 20px; cursor: pointer; border: 1px solid #666; }
-        .chip.active { background: #4CAF50; border-color: #4CAF50; }
-        .form-container { background: #333; padding: 20px; border-radius: 8px; }
-        input, textarea { width: 100%; padding: 10px; margin: 10px 0; background: #1a1a1a; color: white; border: 1px solid #444; border-radius: 4px; box-sizing: border-box; }
-        .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #4CAF50; }
-        input:checked + .slider:before { transform: translateX(22px); }
+        :host { 
+            display: block; 
+            color: white; 
+        }
+
+        .header-actions { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            background: #2a2a2a; 
+            border-radius: 8px; 
+            overflow: hidden; 
+        }
+
+        th, td { 
+            padding: 12px; 
+            text-align: left; 
+            border-bottom: 1px solid #444; 
+        }
+
+        th { 
+            background: #333; 
+            color: #4CAF50; 
+        }
+
+        .btn { 
+            padding: 8px 16px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold; 
+        }
+
+        .btn-add { 
+            background: #4CAF50; 
+            color: white; 
+        }
+
+        .btn-cancel { 
+            background: #666; 
+            color: white; 
+        }
+
+        .empty-state { 
+            text-align: center; 
+            padding: 40px; 
+            background: #2a2a2a; 
+            border-radius: 8px; 
+            border: 1px dashed #444; 
+        }
+
+        .chips-container { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            margin: 10px 0; 
+        }
+
+        .chip { 
+            padding: 6px 14px; 
+            background: #444; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            border: 1px solid #666; 
+        }
+
+        .chip.active {
+            background: #4CAF50; 
+            border-color: #4CAF50; 
+        }
+
+        .form-container { 
+            background: #333; 
+            padding: 20px; 
+            border-radius: 8px; 
+        }
+
+        input, textarea { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 10px 0; 
+            background: #1a1a1a; 
+            color: white; 
+            border: 1px solid #444; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+        }
+
+        .switch { 
+            position: relative; 
+            display: inline-block; 
+            width: 46px; 
+            height: 24px; 
+        }
+
+        .switch input { 
+            opacity: 0; 
+            width: 0; 
+            height: 0; 
+        }
+
+        .slider { 
+            position: absolute; 
+            cursor: pointer; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            bottom: 0; 
+            background-color: #555; 
+            transition: .4s;
+            border-radius: 24px; 
+        }
+
+        .slider:before { 
+            position: absolute; 
+            content: ""; 
+            height: 18px; 
+            width: 18px; 
+            left: 3px; 
+            bottom: 3px; 
+            background-color: white; 
+            transition: .4s; 
+            border-radius: 50%; 
+        }
+
+        input:checked + .slider { 
+            background-color: #4CAF50; 
+        }
+
+        input:checked + .slider:before { 
+            transform: translateX(22px); 
+        }
+
+        /* Mantén tus estilos actuales arriba y añade esto al final */
+
+        @media (max-width: 768px) {
+    :host {
+        display: block;
+        width: 100%;
+        overflow-x: hidden; /* Evita que rebote toda la página */
+    }
+
+    /* Contenedor de la tabla con scroll horizontal */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap; /* Evita que el texto se amontone en varias líneas */
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+    }
+
+    /* Mantenemos el encabezado visible pero ajustado */
+    th, td {
+        padding: 10px 15px;
+        min-width: 120px; /* Asegura que cada columna tenga su espacio */
+        font-size: 0.85rem;
+    }
+
+    /* Columna de nombre fija o más ancha */
+    td:first-child, th:first-child {
+        min-width: 150px;
+        position: sticky;
+        left: 0;
+        background: #333; /* Fondo sólido para que no se traslape al scrollear */
+        z-index: 1;
+    }
+
+    /* Ajuste para que las imágenes no rompan el layout */
+    td img {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    /* Los switches y botones de acción */
+    .switch {
+        transform: scale(0.8);
+    }
+
+    button {
+        padding: 5px;
+    }
+}
+
     `;
 
     constructor() {
@@ -71,23 +240,6 @@ export class BmAdminProductos extends LitElement {
             this.loading = false;
         }
     }
-    //
-    /*_editarProducto(p) {
-    console.log("1. Datos crudos del producto (p):", p); //
-    
-    this.productoActual = {
-        ...p,
-        categorias: p.categoria_ids ? p.categoria_ids.filter(id => id !== null) : []
-    };
-    
-    console.log("2. IDs procesados en productoActual.categorias:", this.productoActual.categorias); //
-    this.isEditing = true;
-    this.requestUpdate();
-}*/
-
-    // bm-admin-productos.js
-
-    // ... (dentro de tu método de renderizado o donde gestiones los chips)
 
     _seleccionarCategoria(catId) {
         console.log('Cambiando categoría a:', catId);
