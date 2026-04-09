@@ -153,52 +153,52 @@ export class BmAdminProductos extends LitElement {
         /* Mantén tus estilos actuales arriba y añade esto al final */
 
         @media (max-width: 768px) {
-    :host {
-        display: block;
-        width: 100%;
-        overflow-x: hidden; /* Evita que rebote toda la página */
-    }
+            :host {
+                display: block;
+                width: 100%;
+                overflow-x: hidden; /* Evita que rebote toda la página */
+            }
 
-    /* Contenedor de la tabla con scroll horizontal */
-    table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap; /* Evita que el texto se amontone en varias líneas */
-        -webkit-overflow-scrolling: touch;
-        border-radius: 8px;
-    }
+            /* Contenedor de la tabla con scroll horizontal */
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap; /* Evita que el texto se amontone en varias líneas */
+                -webkit-overflow-scrolling: touch;
+                border-radius: 8px;
+            }
 
-    /* Mantenemos el encabezado visible pero ajustado */
-    th, td {
-        padding: 10px 15px;
-        min-width: 120px; /* Asegura que cada columna tenga su espacio */
-        font-size: 0.85rem;
-    }
+            /* Mantenemos el encabezado visible pero ajustado */
+            th, td {
+                padding: 10px 15px;
+                min-width: 120px; /* Asegura que cada columna tenga su espacio */
+                font-size: 0.85rem;
+            }
 
-    /* Columna de nombre fija o más ancha */
-    td:first-child, th:first-child {
-        min-width: 150px;
-        position: sticky;
-        left: 0;
-        background: #333; /* Fondo sólido para que no se traslape al scrollear */
-        z-index: 1;
-    }
+            /* Columna de nombre fija o más ancha */
+            td:first-child, th:first-child {
+                min-width: 150px;
+                position: sticky;
+                left: 0;
+                background: #333; /* Fondo sólido para que no se traslape al scrollear */
+                z-index: 1;
+            }
 
-    /* Ajuste para que las imágenes no rompan el layout */
-    td img {
-        width: 40px !important;
-        height: 40px !important;
-    }
+            /* Ajuste para que las imágenes no rompan el layout */
+            td img {
+                width: 40px !important;
+                height: 40px !important;
+            }
 
-    /* Los switches y botones de acción */
-    .switch {
-        transform: scale(0.8);
-    }
+            /* Los switches y botones de acción */
+            .switch {
+                transform: scale(0.8);
+            }
 
-    button {
-        padding: 5px;
-    }
-}
+            button {
+                padding: 5px;
+            }
+        }
 
     `;
 

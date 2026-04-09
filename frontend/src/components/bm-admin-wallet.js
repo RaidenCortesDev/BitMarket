@@ -75,6 +75,61 @@ export class BmAdminWallet extends LitElement {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        
+        /* --- RESPONSIVE DESIGN --- */
+        @media (max-width: 768px) {
+            :host {
+                grid-template-columns: 1fr; /* Una sola columna en tablets y móvil */
+                padding: 10px;
+                gap: 30px;
+            }
+
+            .table-container {
+                padding: 10px;
+                overflow: hidden;
+            }
+
+            /* Hacemos que la tabla sea scrolleable horizontalmente */
+            table {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                width: 100%;
+            }
+
+            /* Evita que los textos se amontonen */
+            th, td {
+                white-space: nowrap;
+                padding: 10px 15px;
+                font-size: 0.8rem;
+            }
+
+            /* Ajuste del Formulario Lateral en móvil */
+            .form-sidebar {
+                position: relative; /* Quita el sticky para que fluya en el scroll */
+                top: 0;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 20px;
+            }
+
+            .info-saldo {
+                margin-bottom: 15px;
+                font-size: 1.1rem;
+            }
+
+            input {
+                font-size: 16px; /* Evita el zoom automático en iOS al hacer focus */
+            }
+        }
+
+        /* Ajustes extra para celulares muy pequeños */
+        @media (max-width: 480px) {
+            th { font-size: 0.7rem; padding: 8px; }
+            td { padding: 8px; }
+            .btn-manage { padding: 6px 10px; font-size: 0.75rem; }
+        }
     `;
 
     constructor() {
