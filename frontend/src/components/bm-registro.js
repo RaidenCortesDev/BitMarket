@@ -11,43 +11,52 @@ export class BmRegistro extends LitElement {
         successMessage: { type: String }
     };
 
-    static styles = css`
+static styles = css`
         :host {
             display: block;
             font-family: var(--main-font, sans-serif);
         }
+
         form {
             display: flex;
             flex-direction: column;
             gap: 15px;
-            max-width: 350px;
-            margin: 40px auto;
-            padding: 25px;
+            /* Subimos a 450px para escritorio y 90% para móviles */
+            width: 90%;
+            max-width: 450px; 
+            margin: 60px auto; /* Centrado y con aire arriba/abajo */
+            padding: 35px; /* Más espacio interno para que se vea premium */
             background: #1a1a1a;
             border-radius: 12px;
             border: 1px solid #333;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
-        h3 { text-align: center; color: var(--accent-color, #4CAF50); margin: 0 0 10px 0; }
+
+        h3 { 
+            text-align: center; 
+            color: var(--accent-color, #4CAF50); 
+            margin: 0 0 15px 0; 
+            font-size: 1.8rem;
+        }
         
+        .error-tag, .success-tag {
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
         .error-tag {
             background: #ff525222;
             color: #ff5252;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
             border: 1px solid #ff5252;
-            text-align: center;
         }
 
         .success-tag {
-            background: #00d4ff22;
+            background: #4CAF5022;
             color: var(--accent-color);
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
             border: 1px solid var(--accent-color);
-            text-align: center;
             animation: fadeIn 0.5s ease;
         }
 
@@ -57,35 +66,58 @@ export class BmRegistro extends LitElement {
         }
 
         input { 
-            padding: 12px; 
+            padding: 14px; 
             background: #0d0d0d; 
             border: 1px solid #444; 
             color: white; 
             border-radius: 6px;
             outline: none;
             transition: 0.3s;
+            font-size: 1rem;
         }
-        input:focus { border-color: var(--accent-color); }
+
+        input:focus { border-color: var(--accent-color); background: #121212; }
         input:disabled { opacity: 0.5; cursor: not-allowed; }
         
         button { 
-            padding: 12px; 
+            padding: 14px; 
             background: var(--accent-color, #4CAF50); 
-            color: #ffffff; /* Texto blanco como pediste */
+            color: #ffffff;
             border: none; 
             border-radius: 6px; 
             cursor: pointer; 
             font-weight: bold;
+            font-size: 1rem;
             transition: 0.3s;
+            margin-top: 10px;
         }
+
         button:hover:not(:disabled) {
             filter: brightness(1.2);
-            box-shadow: 0 0 15px var(--accent-color);
+            box-shadow: 0 0 20px var(--accent-color);
         }
+
         button:disabled {
             background: #333;
             color: #777;
             cursor: not-allowed;
+        }
+
+        /* --- Ajustes para Celular --- */
+        @media (max-width: 768px) {
+            form {
+                margin: 30px auto; 
+                padding: 25px;
+                width: 85%; /* Mantenemos la separación lateral */
+            }
+
+            h3 {
+                font-size: 1.5rem;
+            }
+
+            input, button {
+                font-size: 16px; /* Evita zoom molesto en móviles */
+            }
         }
     `;
 

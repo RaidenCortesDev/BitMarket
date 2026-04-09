@@ -10,64 +10,6 @@ export class BmLogin extends LitElement {
         errorMessage: { type: String }
     };
 
-    /*
-    static styles = css`
-        :host {
-            display: block;
-            font-family: var(--main-font, sans-serif);
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-width: 350px;
-            margin: 40px auto;
-            padding: 25px;
-            background: #1a1a1a;
-            border-radius: 12px;
-            border: 1px solid #333;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-        h3 { text-align: center; color: var(--accent-color, #4CAF50); margin: 0 0 10px 0; }
-        
-        .error-tag {
-            background: #ff525222;
-            color: #ff5252;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            border: 1px solid #ff5252;
-            text-align: center;
-        }
-
-        input { 
-            padding: 12px; 
-            background: #0d0d0d; 
-            border: 1px solid #444; 
-            color: white; 
-            border-radius: 6px;
-            outline: none;
-            transition: 0.3s;
-        }
-        input:focus { border-color: var(--accent-color); }
-        
-        button { 
-            padding: 12px; 
-            background: var(--accent-color, #4CAF50); 
-            color: #ffffff;
-            border: none; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        button:hover:not(:disabled) {
-            filter: brightness(1.2);
-            box-shadow: 0 0 15px var(--accent-color);
-        }
-    `;
-    */
-
     static styles = css`
         :host {
             display: block;
