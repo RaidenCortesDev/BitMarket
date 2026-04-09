@@ -26,7 +26,7 @@ export class BmCatalogo extends LitElement {
     async firstUpdated() {
         console.log("🚀 [Lifecycle] firstUpdated: Iniciando carga de datos...");
         console.log("👤 [User Context] userId actual:", this.userId);
-        
+
         await this._cargarProductos();
         if (this.userId) {
             await this._cargarCarrito();
@@ -40,10 +40,10 @@ export class BmCatalogo extends LitElement {
         try {
             const resp = await fetch(`${API_URL}/productos/publicos`);
             if (!resp.ok) throw new Error(`HTTP Error: ${resp.status}`);
-            
+
             const data = await resp.json();
             this.productos = data;
-            
+
             console.group("📦 [Data] Productos cargados del Catálogo");
             console.table(data.map(p => ({ id: p.id, nombre: p.nombre, precio: p.precio })));
             console.groupEnd();
@@ -66,10 +66,10 @@ export class BmCatalogo extends LitElement {
         try {
             const resp = await fetch(`${API_URL}/carrito/${this.userId}`);
             const data = await resp.json();
-            
+
             const itemsRecibidos = Array.isArray(data) ? data : (data.items || []);
             this.carrito = itemsRecibidos;
-            
+
             console.group("🛍️ [Data] Estado actual del Carrito en DB");
             console.table(itemsRecibidos);
             console.groupEnd();
@@ -136,7 +136,7 @@ export class BmCatalogo extends LitElement {
                 method: 'DELETE'
             });
             console.log("📥 [Response] Status:", resp.status);
-            
+
             if (resp.ok) {
                 console.log(`✅ [Success] ${nombre} eliminado.`);
                 this._showToast(`Eliminado: ${nombre}`);
@@ -150,12 +150,18 @@ export class BmCatalogo extends LitElement {
         }
     }
 
-    _handleTempQty(productId, delta) {
-        const prev = this.tempQuantities[productId] || 1;
-        const next = Math.max(1, prev + delta);
-        this.tempQuantities = { ...this.tempQuantities, [productId]: next };
-        console.log(`🔢 [UI] Cantidad temporal cambiada: ID ${productId} -> ${next}`);
-    }
+_handleTempQty(product, delta) {
+    const stock = product.stock ?? 0;
+    const actual = this.tempQuantities[product.id] || 1;
+    let nuevo = actual + delta;
+
+    // Ajuste automático a los límites reales
+    if (nuevo < 1) nuevo = 1;
+    if (nuevo > stock) nuevo = stock; 
+
+    this.tempQuantities = { ...this.tempQuantities, [product.id]: nuevo };
+}
+
 
     _getQtyInCart(productId) {
         const item = this.carrito.find(i => i.product_id === productId);
@@ -367,6 +373,36 @@ export class BmCatalogo extends LitElement {
             margin-right: 5px; 
         }
 
+        .product-card.no-stock {
+            opacity: 0.7;
+            filter: grayscale(0.5);
+        }
+
+        .stock-info {
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .stock-low {
+            color: #ff9800; /* Naranja para avisar */
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .stock-none {
+            color: #ff5252; /* Rojo */
+            background: rgba(255, 82, 82, 0.1);
+        }
+
+        .btn-disabled {
+            background: #444 !important;
+            color: #888 !important;
+            cursor: not-allowed !important;
+        }
+
         @media (max-width: 768px) {
             .catalogo-container {
                 grid-template-columns: 1fr;
@@ -422,85 +458,116 @@ export class BmCatalogo extends LitElement {
         if (this.loading) return html`<div style="text-align:center; padding: 5rem;">📡 Cargando catálogo...</div>`;
 
         return html`
-            ${this.toastMsg ? html`<div class="toast">${this.toastMsg}</div>` : ''}
+        ${this.toastMsg ? html`<div class="toast">${this.toastMsg}</div>` : ''}
 
-            <div class="catalogo-container">
-                ${this.productos.map(p => {
-                    const cartQty = this._getQtyInCart(p.id);
-                    const tempQty = this.tempQuantities[p.id] || 1;
-                    const precio = p.precio || p.price || 0;
+        <div class="catalogo-container">
+            ${this.productos.map(p => {
+            const cartQty = this._getQtyInCart(p.id);
+            const tempQty = this.tempQuantities[p.id] || 1;
+            const precio = p.precio || p.price || 0;
 
-                    return html`
-                    <div class="product-card">
-                        ${cartQty > 0 ? html`<div class="in-cart-badge">En carrito: ${cartQty}</div>` : ''}
-                        <div class="img-box" @click="${() => this.selectedProduct = p}">
-                            <img src="${p.imagen_url || 'https://via.placeholder.com/200'}" alt="${p.nombre}">
-                        </div>
-                        <div class="info">
-                            <div>${p.categoria_nombres?.map(cat => html`<span class="badge">${cat}</span>`)}</div>
-                            <h3 style="margin: 5px 0; cursor:pointer;" @click="${() => this.selectedProduct = p}">${p.nombre}</h3>
-                            <div class="price">$${precio}</div>
-                            
-                            ${cartQty > 0 ? html`
-                                <div class="subtotal-label">Subtotal: $${(precio * cartQty).toFixed(2)}</div>
-                            ` : ''}
+            // --- LÓGICA DE STOCK ---
+            const stock = p.stock ?? 0;
+            const hasStock = stock > 0;
 
-                            <div style="margin-top: auto; display: flex; flex-direction: column;">
-                                <div style="display: flex; align-items: center; justify-content: center;">
-                                    <div class="stepper">
-                                        <button class="stepper-btn" @click="${() => this._handleTempQty(p.id, -1)}">−</button>
-                                        <span class="qty-val">${tempQty}</span>
-                                        <button class="stepper-btn" @click="${() => this._handleTempQty(p.id, 1)}">+</button>
-                                    </div>
-                                    ${cartQty > 0 ? html`
-                                        <button class="btn-trash" title="Eliminar del carrito" @click="${() => this._removeItem(p.id, p.nombre)}">🗑️</button>
-                                    ` : ''}
-                                </div>
-                                <button class="btn-add" @click="${() => this._addToCart(p)}">
-                                    ${cartQty > 0 ? 'Actualizar cantidad' : 'Agregar al carrito'}
-                                </button>
+            return html`
+                <div class="product-card ${!hasStock ? 'no-stock' : ''}">
+                    ${cartQty > 0 ? html`<div class="in-cart-badge">En carrito: ${cartQty}</div>` : ''}
+                    
+                    <div class="img-box" @click="${() => this.selectedProduct = p}">
+                        <img src="${p.imagen_url || 'https://via.placeholder.com/200'}" alt="${p.nombre}">
+                    </div>
+
+                    <div class="info">
+                        <div>${p.categoria_nombres?.map(cat => html`<span class="badge">${cat}</span>`)}</div>
+                        <h3 style="margin: 5px 0; cursor:pointer;" @click="${() => this.selectedProduct = p}">${p.nombre}</h3>
+                        <div class="price">$${precio}</div>
+                        
+                        ${stock <= 50 ? html`
+                            <div class="stock-info ${stock === 0 ? 'stock-none' : 'stock-low'}">
+                                ${stock === 0 ? '🚫 Agotado' : `⚠️ Solo quedan ${stock} unidades`}
                             </div>
+                        ` : ''}
+
+                        <div style="margin-top: auto; display: flex; flex-direction: column;">
+                            <div style="display: flex; align-items: center; justify-content: center;">
+                                <div class="stepper">
+                                    <button class="stepper-btn" 
+                                        ?disabled="${!hasStock}"
+                                        @click="${() => this._handleTempQty(p, -1)}">−</button>
+                                    <span class="qty-val">${tempQty}</span>
+                                    <button class="stepper-btn" 
+                                        ?disabled="${!hasStock}"
+                                        @click="${() => this._handleTempQty(p, 1)}">+</button>
+                                </div>
+                                ${cartQty > 0 ? html`
+                                    <button class="btn-trash" title="Eliminar del carrito" @click="${() => this._removeItem(p.id, p.nombre)}">🗑️</button>
+                                ` : ''}
+                            </div>
+
+                            <button 
+                                class="btn-add ${!hasStock ? 'btn-disabled' : ''}" 
+                                ?disabled="${!hasStock}"
+                                @click="${() => this._addToCart(p)}">
+                                ${!hasStock ? 'Sin existencias' : (cartQty > 0 ? 'Actualizar cantidad' : 'Agregar al carrito')}
+                            </button>
                         </div>
-                    </div>`;
-                })}
-            </div>
-            ${this.selectedProduct ? this._renderModal() : ''}
-        `;
+                    </div>
+                </div>`;
+        })}
+        </div>
+        ${this.selectedProduct ? this._renderModal() : ''}
+    `;
     }
 
     _renderModal() {
         const p = this.selectedProduct;
         const tempQty = this.tempQuantities[p.id] || 1;
         const precio = p.precio || p.price || 0;
+        const stock = p.stock ?? 0;
+        const hasStock = stock > 0;
 
         return html`
-            <div class="modal-overlay" @click="${() => this.selectedProduct = null}">
-                <div class="modal-content" @click="${e => e.stopPropagation()}" ${animate({ in: fadeInSlow })}>
-                    <button class="close-btn" @click="${() => this.selectedProduct = null}">✕</button>
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <img src="${p.imagen_url}" style="width: 200px; height: 200px; object-fit: contain; background: white; border-radius: 10px;">
-                        <div style="flex: 1; min-width: 250px; text-align: left;">
-                            <h2 style="margin: 0;">${p.nombre}</h2>
-                            <div class="price" style="font-size: 1.8rem;">$${precio}</div>
-                            <p style="color: #bbb; font-size: 0.9rem;">${p.descripcion || 'Sin descripción disponible.'}</p>
-                            
-                            <div style="background: #252525; padding: 15px; border-radius: 12px; margin-top: 15px;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div class="stepper" style="margin-bottom: 0;">
-                                        <button class="stepper-btn" @click="${() => this._handleTempQty(p.id, -1)}">−</button>
-                                        <span class="qty-val">${tempQty}</span>
-                                        <button class="stepper-btn" @click="${() => this._handleTempQty(p.id, 1)}">+</button>
-                                    </div>
-                                    <button class="btn-add" style="flex-grow: 1;" @click="${() => this._addToCart(p)}">
-                                        Confirmar
-                                    </button>
+        <div class="modal-overlay" @click="${() => this.selectedProduct = null}">
+            <div class="modal-content" @click="${e => e.stopPropagation()}" ${animate({ in: fadeInSlow })}>
+                <button class="close-btn" @click="${() => this.selectedProduct = null}">✕</button>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <img src="${p.imagen_url}" style="width: 200px; height: 200px; object-fit: contain; background: white; border-radius: 10px;">
+                    <div style="flex: 1; min-width: 250px; text-align: left;">
+                        <h2 style="margin: 0;">${p.nombre}</h2>
+                        <div class="price" style="font-size: 1.8rem;">$${precio}</div>
+                        
+                        <div style="margin-bottom: 10px;">
+                             ${stock <= 50 ? html`
+                                <span class="stock-info ${stock === 0 ? 'stock-none' : 'stock-low'}">
+                                    ${stock === 0 ? 'Producto Agotado' : `Disponibles: ${stock}`}
+                                </span>
+                            ` : ''}
+                        </div>
+
+                        <p style="color: #bbb; font-size: 0.9rem;">${p.descripcion || 'Sin descripción disponible.'}</p>
+                        
+                        <div style="background: #252525; padding: 15px; border-radius: 12px; margin-top: 15px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="stepper" style="margin-bottom: 0;">
+                                    <button class="stepper-btn" ?disabled="${!hasStock}" @click="${() => this._handleTempQty(p, -1)}">−</button>
+                                    <span class="qty-val">${tempQty}</span>
+                                    <button class="stepper-btn" ?disabled="${!hasStock}" @click="${() => this._handleTempQty(p, 1)}">+</button>
                                 </div>
+                                <button 
+                                    class="btn-add ${!hasStock ? 'btn-disabled' : ''}" 
+                                    style="flex-grow: 1;" 
+                                    ?disabled="${!hasStock}"
+                                    @click="${() => this._addToCart(p)}">
+                                    ${hasStock ? 'Confirmar' : 'No disponible'}
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        `;
+        </div>
+    `;
     }
 }
 customElements.define('bm-cliente-tienda', BmCatalogo);
