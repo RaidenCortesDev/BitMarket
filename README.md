@@ -78,7 +78,7 @@ CLOUDINARY_API_SECRET=tu_api_secret
 ```
 
 ### 3. Base de Datos e Imágenes
-* **Base de Datos:** El proyecto requiere una estructura de tablas específica (ver carpeta `/database` si está disponible o solicitar el script SQL).
+* **Base de Datos:** El proyecto requiere una estructura de tablas específica (ver carpeta `/db` si está disponible o solicitar el script SQL).
 * **Cloudinary:** El catálogo actual utiliza URLs directas de imágenes alojadas en mi cuenta de Cloudinary. Si deseas subir productos nuevos con imágenes propias, **debes configurar tus propias credenciales** en el archivo `.env`; de lo contrario, la carga de archivos fallará.
 
 ### 4. Instalación
