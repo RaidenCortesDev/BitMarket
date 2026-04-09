@@ -593,53 +593,6 @@ app.post('/api/carrito/comprar', async (req, res) => {
     }
 });
 
-/*app.post('/api/carrito/comprar', async (req, res) => {
-    const { userId, total } = req.body;
-
-    // Iniciamos la transacción
-    const client = await pool.connect();
-
-    try {
-        await client.query('BEGIN');
-
-        // 1. Restar el saldo al usuario (validando que tenga suficiente)
-        const updateSaldoQuery = `
-            UPDATE users 
-            SET saldo = saldo - $1 
-            WHERE id = $2 AND saldo >= $1
-            RETURNING saldo
-        `;
-        const resSaldo = await client.query(updateSaldoQuery, [total, userId]);
-
-        if (resSaldo.rowCount === 0) {
-            throw new Error('Saldo insuficiente o usuario no encontrado');
-        }
-
-        // 2. Limpiar la tabla carrito_compras para este usuario
-        const deleteCarritoQuery = `
-            DELETE FROM carrito_compras 
-            WHERE usuer_id = $1
-        `;
-        await client.query(deleteCarritoQuery, [userId]);
-
-        // Si todo salió bien, guardamos cambios
-        await client.query('COMMIT');
-
-        res.json({
-            success: true,
-            message: 'Compra procesada y carrito limpio',
-            nuevoSaldo: resSaldo.rows[0].saldo
-        });
-
-    } catch (err) {
-        await client.query('ROLLBACK');
-        console.error('❌ Error en la transacción de compra:', err.message);
-        res.status(400).json({ error: err.message });
-    } finally {
-        client.release();
-    }
-});*/
-
 // --- Encendido del log del backend ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
