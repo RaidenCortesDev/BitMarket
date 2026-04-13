@@ -24,9 +24,6 @@ export class BmCatalogo extends LitElement {
     }
 
     async firstUpdated() {
-        console.log("🚀 [Lifecycle] firstUpdated: Iniciando carga de datos...");
-        console.log("👤 [User Context] userId actual:", this.userId);
-
         await this._cargarProductos();
         if (this.userId) {
             await this._cargarCarrito();
@@ -44,10 +41,6 @@ export class BmCatalogo extends LitElement {
             const data = await resp.json();
             this.productos = data;
 
-            console.group("📦 [Data] Productos cargados del Catálogo");
-            console.table(data.map(p => ({ id: p.id, nombre: p.nombre, precio: p.precio })));
-            console.groupEnd();
-
             const temps = { ...this.tempQuantities };
             data.forEach(p => {
                 if (temps[p.id] === undefined) temps[p.id] = 1;
@@ -56,13 +49,11 @@ export class BmCatalogo extends LitElement {
         } catch (err) {
             console.error("❌ [Error] Falló _cargarProductos:", err);
         } finally {
-            console.timeEnd("⏱️ [API] Tiempo carga productos");
             this.loading = false;
         }
     }
 
     async _cargarCarrito() {
-        console.log(`🛒 [API] Cargando carrito para userId: ${this.userId}...`);
         try {
             const resp = await fetch(`${API_URL}/carrito/${this.userId}`);
             const data = await resp.json();
@@ -70,23 +61,17 @@ export class BmCatalogo extends LitElement {
             const itemsRecibidos = Array.isArray(data) ? data : (data.items || []);
             this.carrito = itemsRecibidos;
 
-            console.group("🛍️ [Data] Estado actual del Carrito en DB");
-            console.table(itemsRecibidos);
-            console.groupEnd();
-
             const temps = { ...this.tempQuantities };
             itemsRecibidos.forEach(item => {
                 temps[item.product_id] = item.cantidad;
             });
             this.tempQuantities = temps;
-            console.log("🔄 [Sync] Cantidades temporales sincronizadas con DB.");
         } catch (err) {
             console.error("❌ [Error] Falló _cargarCarrito:", err);
         }
     }
 
     async _addToCart(product) {
-        console.group("🆕 [Action] Agregando al carrito...");
         if (!this.userId) {
             console.error("❌ [Auth] Intento de agregar sin userId");
             console.groupEnd();
@@ -100,8 +85,6 @@ export class BmCatalogo extends LitElement {
             cantidad: Number(qtyToAdd)
         };
 
-        console.log("📤 [Request] Enviando a POST /api/carrito/add:", payload);
-
         try {
             const response = await fetch(`${API_URL}/carrito/add`, {
                 method: 'POST',
@@ -110,10 +93,8 @@ export class BmCatalogo extends LitElement {
             });
 
             const result = await response.json();
-            console.log("📥 [Response] Servidor respondió:", result);
 
             if (response.ok) {
-                console.log("✅ [Success] Carrito actualizado en servidor.");
                 this._showToast(`✓ Carrito actualizado`);
                 await this._cargarCarrito();
                 if (this.selectedProduct) this.selectedProduct = null;
@@ -130,15 +111,12 @@ export class BmCatalogo extends LitElement {
     }
 
     async _removeItem(productId, nombre) {
-        console.group(`🗑️ [Action] Eliminando producto ${productId}`);
         try {
             const resp = await fetch(`${API_URL}/carrito/remove/${this.userId}/${productId}`, {
                 method: 'DELETE'
             });
-            console.log("📥 [Response] Status:", resp.status);
 
             if (resp.ok) {
-                console.log(`✅ [Success] ${nombre} eliminado.`);
                 this._showToast(`Eliminado: ${nombre}`);
                 this.tempQuantities = { ...this.tempQuantities, [productId]: 1 };
                 await this._cargarCarrito();

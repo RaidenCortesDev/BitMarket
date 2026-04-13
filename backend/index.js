@@ -70,8 +70,9 @@ app.post('/api/registro', async (req, res) => {
     }
 });
 
-// --- Sección de inicio de sesión ---
 
+
+// --- Sección de inicio de sesión ---
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -81,10 +82,6 @@ app.post('/api/login', async (req, res) => {
         const user = result.rows[0];
         const match = await bcrypt.compare(password, user.password);
         if (!match) return res.status(401).json({ error: "Contraseña incorrecta" });
-
-        console.log(`ID Usuario: ${user.id}`);
-        console.log(`Usuario: ${user.email} | role_id en DB: ${user.role_id}`);
-        console.log(`saldo: ${user.saldo} `);
 
         const rolAsignado = (user.role_id == 1 || user.role_id == 2) ? 'admin' : 'cliente';
 
@@ -313,7 +310,6 @@ app.get('/api/categorias/activas', async (req, res) => {
 app.get('/api/wallet/customers', async (req, res) => {
     try {
         const result = await pool.query('SELECT id, nombre, email, saldo FROM users WHERE role_id = 3');
-        console.log("✅ Datos obtenidos:", result.rowCount);
         res.json(result.rows);
     } catch (err) {
         console.error("❌ Error real:", err.message);
@@ -437,8 +433,6 @@ app.post('/api/carrito/add', async (req, res) => {
     const usuer_id = parseInt(req.body.usuer_id);
     const product_id = parseInt(req.body.product_id);
     const cantidad = parseInt(req.body.cantidad) || 1;
-
-    console.log("DEBUG - Procesando registro:", { usuer_id, product_id, cantidad });
 
     // Verificación de seguridad manual antes de enviar a SQL
     if (isNaN(usuer_id) || isNaN(product_id)) {

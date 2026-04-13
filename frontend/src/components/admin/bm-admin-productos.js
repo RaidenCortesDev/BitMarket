@@ -9,7 +9,7 @@ export class BmAdminProductos extends LitElement {
         isEditing: { type: Boolean },
         productoActual: { type: Object }
     };
-    
+
     static styles = css`
         :host { 
             display: block; 
@@ -213,10 +213,23 @@ export class BmAdminProductos extends LitElement {
     }
 
     _initProducto() {
-        const session = JSON.parse(localStorage.getItem('bm_session'));
+        // 1. Obtenemos el dato codificado
+        const rawData = localStorage.getItem('bm_session');
+        let session = null;
+
+        if (rawData) {
+            try {
+                // 2. Quitamos el disfraz (Base64 -> JSON)
+                session = JSON.parse(atob(rawData));
+            } catch (e) {
+                console.error("Error decodificando sesión en Productos:", e);
+            }
+        }
+
+        // 3. Seguimos con tu lógica normal
         this.productoActual = {
             id: null,
-            nombre: '', // <-- Asegurado como 'nombre'
+            nombre: '',
             descripcion: '',
             precio: '',
             imagen_url: '',
@@ -242,7 +255,6 @@ export class BmAdminProductos extends LitElement {
     }
 
     _seleccionarCategoria(catId) {
-        console.log('Cambiando categoría a:', catId);
         this.productoActual = { ...this.productoActual, id_categoria: catId };
         this.requestUpdate(); // Asegura que Lit vuelva a renderizar con la nueva clase active
     }
@@ -254,7 +266,6 @@ export class BmAdminProductos extends LitElement {
             // Si el backend nos mandó categoria_ids, los usamos, si no, array vacío
             categorias: Array.isArray(p.categoria_ids) ? p.categoria_ids : []
         };
-        console.log("2. IDs procesados en productoActual.categorias:", this.productoActual.categorias)
         this.isEditing = true;
         this.requestUpdate();
     }
@@ -350,13 +361,13 @@ export class BmAdminProductos extends LitElement {
                     <label>Categorías:</label>
                     <div class="chips-container">
                         ${this.categoriasDisponibles.map(c => {
-                        // 💡 CLAVE: Miramos siempre a 'categorias', no a 'categoria_ids'
-                        const idsActivos = this.productoActual.categorias || [];
-                        
-                        // Convertimos ambos a String para evitar problemas de tipo (1 vs "1")
-                        const isActive = idsActivos.some(id => String(id) === String(c.id));
+            // 💡 CLAVE: Miramos siempre a 'categorias', no a 'categoria_ids'
+            const idsActivos = this.productoActual.categorias || [];
 
-                        return html`
+            // Convertimos ambos a String para evitar problemas de tipo (1 vs "1")
+            const isActive = idsActivos.some(id => String(id) === String(c.id));
+
+            return html`
                             <div 
                                 class="chip ${isActive ? 'active' : ''}"
                                 @click="${() => this._toggleCategory(c.id)}"
@@ -364,7 +375,7 @@ export class BmAdminProductos extends LitElement {
                                 ${c.nombre}
                             </div>
                         `;
-                    })}
+        })}
                     </div>
                     
                     <div class="field">
@@ -383,60 +394,63 @@ export class BmAdminProductos extends LitElement {
     }
 
     _openForm(prod = null) {
-    if (prod) {
-        this.productoActual = { 
-            ...prod, 
-            // Si existe categoria_ids del backend, lo asignamos a categorias.
-            categorias: prod.categoria_ids || [] 
-        };
-    } else {
-        this._initProducto();
+        if (prod) {
+            this.productoActual = {
+                ...prod,
+                // Si existe categoria_ids del backend, lo asignamos a categorias.
+                categorias: prod.categoria_ids || []
+            };
+        } else {
+            this._initProducto();
+        }
+        this.isEditing = true;
     }
-    this.isEditing = true;
-}
 
-_toggleCategory(id) {
-    const actuales = this.productoActual.categorias || [];
-    const cats = [...actuales];
-    const idx = cats.indexOf(id);
-    if (idx > -1) {
-        cats.splice(idx, 1);
-    } else {
-        cats.push(id);
+    _toggleCategory(id) {
+        const actuales = this.productoActual.categorias || [];
+        const cats = [...actuales];
+        const idx = cats.indexOf(id);
+        if (idx > -1) {
+            cats.splice(idx, 1);
+        } else {
+            cats.push(id);
+        }
+        this.productoActual = { ...this.productoActual, categorias: cats };
+        this.requestUpdate();
     }
-    this.productoActual = { ...this.productoActual, categorias: cats };
-    this.requestUpdate();
-}
 
 
     async _saveProduct(e) {
         e.preventDefault();
 
-        // 1. PRIMERO declaramos la URL y el método (Esto soluciona el error)
         const method = this.productoActual.id ? 'PUT' : 'POST';
         const url = this.productoActual.id ? `${API_URL}/productos/${this.productoActual.id}` : `${API_URL}/productos`;
 
-        // 2. Obtenemos el usuario de la sesión correcta (tu localStorage usa 'bm_session')
-        const session = JSON.parse(localStorage.getItem('bm_session'));
+        // --- CORRECCIÓN AQUÍ ---
+        const rawData = localStorage.getItem('bm_session');
+        let session = null;
+        if (rawData) {
+            try {
+                session = JSON.parse(atob(rawData));
+            } catch (err) {
+                console.error("Error decodificando sesión:", err);
+            }
+        }
+        // ------------------------
 
-        // 2. Extraemos el ID explícitamente
         const currentUserId = session?.id;
-        // Si no hay id en la sesión, avísale a la consola para que sepas qué pasa
+
         if (!currentUserId) {
             alert("⚠️ Sesión inválida. Por favor, sal y vuelve a entrar.");
             return;
         }
 
-        // 3. Preparamos los datos incluyendo la imagen_url y el ID del usuario
         const datosAEnviar = {
             ...this.productoActual,
-            user_id: currentUserId,      // Para el POST
-            usuario_id: currentUserId    // Para el PUT
+            user_id: currentUserId,
+            usuario_id: currentUserId
         };
 
-        console.log("Datos exactos que se envían al backend:", datosAEnviar);
-
-        // 4. Hacemos el envío de datos UNA sola vez
         try {
             const resp = await fetch(url, {
                 method: method,
@@ -488,7 +502,6 @@ _toggleCategory(id) {
 
             if (data.secure_url) {
                 this.productoActual = { ...this.productoActual, imagen_url: data.secure_url };
-                console.log("Imagen subida con éxito:", data.secure_url);
             } else {
                 console.error("Error en la respuesta de Cloudinary:", data);
             }

@@ -168,7 +168,20 @@ export class BmAdminWallet extends LitElement {
 
         const monto = parseFloat(montoInput.value);
         const desc = descInput.value.trim();
-        const session = JSON.parse(localStorage.getItem('bm_session'));
+        const rawData = localStorage.getItem('bm_session');
+        let session = null;
+        if (rawData) {
+            try {
+                session = JSON.parse(atob(rawData));
+            } catch (err) {
+                console.error("Error decodificando sesión en Wallet:", err);
+            }
+        }
+
+        if (!session) {
+            return this._setFeedback("Sesión expirada. Por favor reingresa.", "error");
+        }
+        
 
         // 1. Validaciones básicas de campos
         if (!monto || monto === 0) {

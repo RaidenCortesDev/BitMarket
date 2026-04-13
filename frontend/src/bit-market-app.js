@@ -84,7 +84,17 @@ export class BitMarketApp extends LitElement {
 
     constructor() {
         super();
-        const savedUser = JSON.parse(localStorage.getItem('bm_session'));
+        const rawData = localStorage.getItem('bm_session');
+        let savedUser = null;
+
+        if (rawData) {
+            try {
+                savedUser = JSON.parse(atob(rawData));
+            } catch (e) {
+                console.error('Error parsing session data:', e);
+                localStorage.removeItem('bm_session');
+            }
+        }
 
         if (savedUser && savedUser.rol) {
             this.id = savedUser.id;
@@ -113,7 +123,6 @@ export class BitMarketApp extends LitElement {
         });
 
         this.addEventListener('admin-nav', (e) => {
-            console.log("Navegación detectada hacia:", e.detail.seccion);
             this.adminSection = e.detail.seccion;
             this.requestUpdate();
         });
@@ -150,15 +159,23 @@ export class BitMarketApp extends LitElement {
 
             this.view = 'dashboard';
 
-            localStorage.setItem('bm_session', JSON.stringify({
-                id: this.id,
-                nombre: this.nombre,
-                email: this.correo,
-                rol: this.rol,
-                saldo: this.saldo
-            }));
+        const sessionData = {
+            id: this.id,
+            nombre: this.nombre,
+            email: this.correo,
+            rol: this.rol,
+            saldo: this.saldo
+        };
 
-            this.requestUpdate();
+        // Convertimos el objeto a texto y luego a un "código" (Base64)
+        const encodedData = btoa(JSON.stringify(sessionData));
+        
+        // Lo guardamos con un nombre menos obvio si quieres, ej: 'bm_data'
+        localStorage.setItem('bm_session', encodedData);
+
+        this.view = 'dashboard';
+        this.requestUpdate();
+
         }
     }
 
@@ -200,7 +217,6 @@ export class BitMarketApp extends LitElement {
                 @admin-nav="${(e) => {
                 // Forzamos que adminSection cambie para ambos (admin y cliente)
                 this.adminSection = e.detail.seccion;
-                console.log("Navegando a:", this.adminSection);
                 this.requestUpdate();
             }}">
             </bm-header>
